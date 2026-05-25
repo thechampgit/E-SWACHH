@@ -20,11 +20,15 @@ export function initializeFirebase(): {
   const storage = getStorage(app);
   
   let messaging: Messaging | null = null;
+  
+  // Messaging only works in the browser
   if (typeof window !== 'undefined') {
     isSupported().then(supported => {
-      if (supported) {
+      if (supported && !messaging) {
         messaging = getMessaging(app);
       }
+    }).catch(err => {
+      console.warn('Messaging not supported or blocked:', err);
     });
   }
 
@@ -32,7 +36,7 @@ export function initializeFirebase(): {
 }
 
 export async function requestNotificationPermission(messaging: Messaging | null) {
-  if (!messaging) return null;
+  if (!messaging || typeof window === 'undefined') return null;
   
   try {
     const permission = await Notification.requestPermission();
@@ -40,14 +44,10 @@ export async function requestNotificationPermission(messaging: Messaging | null)
       const token = await getToken(messaging, {
         vapidKey: firebaseConfig.vapidKey
       });
-      if (token) {
-        console.log('FCM Token:', token);
-        // In a real app, you would save this token to the user's Firestore document
-        return token;
-      }
+      return token;
     }
   } catch (error) {
-    console.error('Error requesting notification permission:', error);
+    console.warn('Error requesting notification permission:', error);
   }
   return null;
 }

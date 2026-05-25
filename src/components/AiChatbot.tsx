@@ -21,7 +21,10 @@ export function AiChatbot() {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const scrollElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
     }
   }, [messages]);
 
@@ -52,7 +55,7 @@ export function AiChatbot() {
       {!isOpen ? (
         <Button 
           size="icon" 
-          className="h-14 w-14 rounded-full shadow-2xl hover:scale-110 transition-transform" 
+          className="h-14 w-14 rounded-full shadow-2xl hover:scale-110 transition-transform bg-primary text-primary-foreground" 
           onClick={() => setIsOpen(true)}
         >
           <MessageSquare className="h-6 w-6" />

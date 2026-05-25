@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero",
+      "description": "Smart city concept with modern architecture and clean streets",
+      "imageUrl": "https://picsum.photos/seed/civic1/1200/600",
+      "imageHint": "smart city"
+    },
+    {
+      "id": "feature-pothole",
+      "description": "Close up of a pothole on an urban road",
+      "imageUrl": "https://picsum.photos/seed/civic2/400/300",
+      "imageHint": "road pothole"
+    },
+    {
+      "id": "feature-garbage",
+      "description": "Clean modern recycling bins in a city",
+      "imageUrl": "https://picsum.photos/seed/civic3/400/300",
+      "imageHint": "recycling bins"
+    },
+    {
+      "id": "feature-lighting",
+      "description": "Street lights illuminating a clean urban pathway at night",
+      "imageUrl": "https://picsum.photos/seed/civic4/400/300",
+      "imageHint": "street lights"
+    }
+  ]
 }
