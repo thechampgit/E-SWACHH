@@ -63,6 +63,7 @@ export default function SignupPage() {
         email,
         phone,
         role: 'citizen',
+        contributionLevel: 0,
         createdAt: new Date().toISOString(),
       };
 
