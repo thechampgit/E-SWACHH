@@ -1,5 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -10,14 +14,21 @@ import {
   ShieldCheck, 
   ArrowRight,
   Menu,
-  X,
   PlusCircle,
-  Search
+  Search,
+  LogOut,
+  LayoutDashboard
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function LandingPage() {
+  const { user } = useUser();
+  const auth = useAuth();
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero');
+
+  const handleLogout = async () => {
+    if (auth) await signOut(auth);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -32,15 +43,29 @@ export default function LandingPage() {
           </Link>
           <div className="hidden md:flex items-center gap-6">
             <Link href="#features" className="text-sm font-medium hover:text-primary transition-colors">Features</Link>
-            <Link href="#about" className="text-sm font-medium hover:text-primary transition-colors">About</Link>
             <Link href="/track" className="text-sm font-medium hover:text-primary transition-colors">Track Issue</Link>
             <div className="flex items-center gap-2 ml-4">
-              <Button variant="ghost" asChild>
-                <Link href="/login">Login</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/signup">Get Started</Link>
-              </Button>
+              {user ? (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/dashboard">
+                      <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={handleLogout} title="Logout">
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link href="/login">Login</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link href="/signup">Get Started</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
           <Button variant="ghost" size="icon" className="md:hidden">
@@ -160,78 +185,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-headline font-bold">What Citizens Say</h2>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <TestimonialCard 
-              quote="CivicPulse made it so easy to get the broken streetlight on our street fixed. It took only 3 days!"
-              author="Sarah Johnson"
-              role="Downtown Resident"
-            />
-            <TestimonialCard 
-              quote="The map view is incredible. I can see exactly what's happening in my neighborhood and stay informed."
-              author="Michael Chen"
-              role="Community Leader"
-            />
-            <TestimonialCard 
-              quote="I love the AI categorization. It saves so much time not having to figure out which department to call."
-              author="Elena Rodriguez"
-              role="Citizen Journalist"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 text-center space-y-8">
-          <h2 className="text-4xl font-headline font-bold">Ready to make a difference?</h2>
-          <p className="text-xl opacity-90 max-w-2xl mx-auto">Join thousands of citizens working together to build cleaner, safer, and smarter cities for everyone.</p>
-          <div className="flex justify-center gap-4">
-            <Button size="lg" variant="secondary" className="h-14 px-8 text-lg" asChild>
-              <Link href="/signup">Create Free Account</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="py-12 bg-slate-900 text-slate-400 border-t border-slate-800">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            <div className="col-span-2 space-y-4">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl">
-                  C
-                </div>
-                <span className="text-xl font-headline font-bold text-white">CivicPulse</span>
-              </Link>
-              <p className="max-w-xs">Leading the way in digital civic infrastructure and citizen engagement technology.</p>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-white font-bold">Platform</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/report" className="hover:text-primary transition-colors">Report Issue</Link></li>
-                <li><Link href="/track" className="hover:text-primary transition-colors">Track Status</Link></li>
-                <li><Link href="/map" className="hover:text-primary transition-colors">Impact Map</Link></li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-white font-bold">Company</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="hover:text-primary transition-colors">About Us</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-slate-800 text-center text-sm">
-            <p>© {new Date().getFullYear()} CivicPulse. All rights reserved.</p>
-          </div>
+        <div className="container mx-auto px-4 text-center">
+          <p>© {new Date().getFullYear()} CivicPulse. All rights reserved.</p>
         </div>
       </footer>
     </div>
@@ -247,25 +204,6 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
         </div>
         <h3 className="text-xl font-bold text-slate-900">{title}</h3>
         <p className="text-muted-foreground leading-relaxed">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function TestimonialCard({ quote, author, role }: { quote: string, author: string, role: string }) {
-  return (
-    <Card className="border shadow-sm">
-      <CardContent className="pt-8 space-y-6">
-        <p className="text-lg italic text-slate-700">"{quote}"</p>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-            {author[0]}
-          </div>
-          <div>
-            <h4 className="font-bold text-slate-900">{author}</h4>
-            <p className="text-xs text-muted-foreground">{role}</p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
