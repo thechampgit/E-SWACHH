@@ -3,8 +3,8 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { useFirestore, useCollection, useUser } from '@/firebase';
+import { collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,10 +19,10 @@ import {
   LayoutGrid,
   Filter,
   MapPin,
-  LogOut
+  LogOut,
+  List
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
@@ -32,10 +32,16 @@ export default function DashboardPage() {
   const { user } = useUser();
   const router = useRouter();
 
+  // Query complaints specific to the logged-in user
   const complaintsQuery = useMemo(() => {
-    if (!db) return null;
-    return query(collection(db, "complaints"), orderBy("createdAt", "desc"), limit(20));
-  }, [db]);
+    if (!db || !user) return null;
+    return query(
+      collection(db, "complaints"), 
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc"), 
+      limit(20)
+    );
+  }, [db, user]);
 
   const { data: complaints, loading } = useCollection(complaintsQuery);
 
@@ -66,8 +72,8 @@ export default function DashboardPage() {
           </Link>
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-              <Link href="/map">
-                <MapIcon className="mr-2 h-4 w-4" /> View Map
+              <Link href="/my-reports">
+                <List className="mr-2 h-4 w-4" /> My Reports
               </Link>
             </Button>
             <Button size="sm" asChild>
@@ -90,7 +96,7 @@ export default function DashboardPage() {
                 <h1 className="text-3xl font-headline font-bold">
                   Welcome back, {user?.displayName || 'Citizen'}!
                 </h1>
-                <p className="text-primary-foreground/80 max-w-md">Your contributions are making our city better every day.</p>
+                <p className="text-primary-foreground/80 max-w-md">Your contributions are making our city better every day. Track your recent reports below.</p>
                 <div className="flex gap-4 pt-2">
                   <Button variant="secondary" size="lg" asChild>
                     <Link href="/report">Report New Issue</Link>
@@ -106,52 +112,44 @@ export default function DashboardPage() {
             <StatCard label="Total Filed" value={stats.total} icon={<Clock className="text-blue-500" />} color="blue" />
             <StatCard label="Resolved" value={stats.resolved} icon={<CheckCircle2 className="text-green-500" />} color="green" />
             <StatCard label="Pending" value={stats.pending} icon={<AlertCircle className="text-orange-500" />} color="orange" />
-            <StatCard label="Response Rate" value="98%" icon={<TrendingUp className="text-purple-500" />} color="purple" />
+            <StatCard label="Active" value={stats.total - stats.resolved} icon={<TrendingUp className="text-purple-500" />} color="purple" />
           </div>
         </div>
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-headline font-bold text-slate-900">Recent Reports</h2>
+            <h2 className="text-2xl font-headline font-bold text-slate-900">Your Recent Reports</h2>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="text-slate-500">
-                <Filter className="mr-2 h-4 w-4" /> Filter
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/my-reports">
+                  View All <ArrowUpRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>
 
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="bg-slate-100 p-1">
-              <TabsTrigger value="all">All Issues</TabsTrigger>
-              <TabsTrigger value="pending">Pending</TabsTrigger>
-              <TabsTrigger value="resolved">Resolved</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="all" className="pt-4">
-              {loading ? (
-                <div className="flex items-center justify-center py-20">
-                  <Clock className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : !complaints || complaints.length === 0 ? (
-                <Card className="border-2 border-dashed p-12 text-center bg-white">
-                  <div className="flex flex-col items-center gap-4">
-                    <AlertCircle className="h-12 w-12 text-slate-300" />
-                    <h3 className="text-xl font-bold">No issues reported yet</h3>
-                    <p className="text-muted-foreground">Your recent activity will appear here once you start reporting.</p>
-                    <Button asChild>
-                      <Link href="/report">Submit Your First Report</Link>
-                    </Button>
-                  </div>
-                </Card>
-              ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {complaints.map((c) => (
-                    <ComplaintCard key={c.id} complaint={c} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Clock className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : !complaints || complaints.length === 0 ? (
+            <Card className="border-2 border-dashed p-12 text-center bg-white">
+              <div className="flex flex-col items-center gap-4">
+                <AlertCircle className="h-12 w-12 text-slate-300" />
+                <h3 className="text-xl font-bold">No issues reported yet</h3>
+                <p className="text-muted-foreground">Your recent activity will appear here once you start reporting.</p>
+                <Button asChild>
+                  <Link href="/report">Submit Your First Report</Link>
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {complaints.map((c: any) => (
+                <ComplaintCard key={c.id} complaint={c} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

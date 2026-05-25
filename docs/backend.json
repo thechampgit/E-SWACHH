@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -20,6 +21,7 @@
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
+        "userName": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
         "category": { "type": "string" },
@@ -30,7 +32,7 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["title", "category", "description", "location", "status"]
+      "required": ["title", "category", "description", "location", "status", "userId"]
     }
   },
   "auth": {
