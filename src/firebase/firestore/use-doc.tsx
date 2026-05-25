@@ -30,7 +30,8 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
         setData(snapshot.exists() ? { ...snapshot.data()!, id: snapshot.id } : null);
         setLoading(false);
       },
-      async (err: FirestoreError) => {
+      (err: FirestoreError) => {
+        console.error(`Firestore useDoc Error [${docRef.path}]:`, err);
         if (err.code === 'permission-denied') {
           const permissionError = new FirestorePermissionError({
             path: docRef.path,

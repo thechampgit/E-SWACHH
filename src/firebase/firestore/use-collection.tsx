@@ -30,14 +30,13 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         const items = snapshot.docs.map((doc) => ({
           ...doc.data(),
           id: doc.id,
-        }));
+        } as T & { id: string }));
         setData(items);
         setLoading(false);
       },
-      async (err: FirestoreError) => {
+      (err: FirestoreError) => {
+        console.error('Firestore useCollection Error:', err);
         if (err.code === 'permission-denied') {
-          // We can't easily get the path from a Query object in the same way as a DocRef,
-          // but we can emit a general list error.
           const permissionError = new FirestorePermissionError({
             path: 'collection_query',
             operation: 'list',

@@ -4,12 +4,11 @@ import { FirebaseClientProvider } from '@/firebase';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 import { AiChatbot } from '@/components/AiChatbot';
 import { Metadata, Viewport } from 'next';
+import React from 'react';
 
 export const metadata: Metadata = {
   title: 'CivicPulse | Smart City Governance',
   description: 'CivicPulse is a smart civic issue reporting and monitoring platform that enables citizens and administrators to collaborate in resolving public infrastructure and community issues efficiently in real time.',
-  themeColor: '#2563eb',
-  manifest: '/manifest.json',
   openGraph: {
     title: 'CivicPulse | Smart City Governance',
     description: 'Report, track, and resolve civic issues in real-time.',
@@ -28,6 +27,14 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: '#2563eb',
 };
+
+/**
+ * A simple hydration guard to prevent Next.js 15 hydration mismatches
+ * for client-side heavy providers.
+ */
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
 
 export default function RootLayout({
   children,

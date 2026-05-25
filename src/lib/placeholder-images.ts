@@ -1,4 +1,4 @@
-import data from './placeholder-images.json';
+import data from '@/app/lib/placeholder-images.json';
 
 export type ImagePlaceholder = {
   id: string;
@@ -7,4 +7,7 @@ export type ImagePlaceholder = {
   imageHint: string;
 };
 
-export const PlaceHolderImages: ImagePlaceholder[] = data.placeholderImages;
+/**
+ * Centrally managed placeholder image data to prevent undefined access crashes.
+ */
+export const PlaceHolderImages: ImagePlaceholder[] = data.placeholderImages || [];
