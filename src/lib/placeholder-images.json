@@ -2,27 +2,27 @@
   "placeholderImages": [
     {
       "id": "hero",
-      "description": "Smart city concept with modern architecture and clean streets",
-      "imageUrl": "https://picsum.photos/seed/civic1/1200/600",
-      "imageHint": "smart city"
+      "description": "Minimalist modern city architecture with clean lines and greenery",
+      "imageUrl": "https://picsum.photos/seed/clean1/1200/600",
+      "imageHint": "clean architecture"
     },
     {
       "id": "feature-pothole",
-      "description": "Close up of a pothole on an urban road",
-      "imageUrl": "https://picsum.photos/seed/civic2/400/300",
-      "imageHint": "road pothole"
+      "description": "Artistic minimalist road maintenance scene",
+      "imageUrl": "https://picsum.photos/seed/clean2/400/300",
+      "imageHint": "urban cleanup"
     },
     {
       "id": "feature-garbage",
-      "description": "Clean modern recycling bins in a city",
-      "imageUrl": "https://picsum.photos/seed/civic3/400/300",
-      "imageHint": "recycling bins"
+      "description": "Sleek modern recycling station in a clean urban environment",
+      "imageUrl": "https://picsum.photos/seed/clean3/400/300",
+      "imageHint": "clean recycling"
     },
     {
       "id": "feature-lighting",
-      "description": "Street lights illuminating a clean urban pathway at night",
-      "imageUrl": "https://picsum.photos/seed/civic4/400/300",
-      "imageHint": "street lights"
+      "description": "Minimalist urban light installation in a serene park",
+      "imageUrl": "https://picsum.photos/seed/clean4/400/300",
+      "imageHint": "minimalist light"
     }
   ]
 }
