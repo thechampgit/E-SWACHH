@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation, AlertCircle } from 'lucide-react';
@@ -13,10 +13,10 @@ const mapContainerStyle = {
   borderRadius: '0.75rem',
 };
 
-// Center of India
+// Sensible global default (e.g., center of map)
 const center = {
-  lat: 20.5937,
-  lng: 78.9629,
+  lat: 0,
+  lng: 0,
 };
 
 interface LocationPickerProps {
@@ -32,23 +32,11 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
   const [address, setAddress] = useState(initialLocation?.address || '');
   const [error, setError] = useState<string | null>(null);
 
-  const validateAndSetLocation = (lat: number, lng: number, addr: string, results: google.maps.GeocoderResult[]) => {
-    // Check if the country is India
-    const countryComponent = results[0]?.address_components.find(c => c.types.includes('country'));
-    
-    if (countryComponent && (countryComponent.short_name === 'IN' || countryComponent.long_name === 'India')) {
-      setError(null);
-      setMarker({ lat, lng });
-      setAddress(addr);
-      onLocationSelect({ address: addr, latitude: lat, longitude: lng });
-    } else {
-      setError("Reporting is restricted to India only. Please select a valid location within Indian territory.");
-      toast({
-        variant: "destructive",
-        title: "Invalid Location",
-        description: "CivicPulse currently only supports reports within India."
-      });
-    }
+  const setLocationDetails = (lat: number, lng: number, addr: string) => {
+    setError(null);
+    setMarker({ lat, lng });
+    setAddress(addr);
+    onLocationSelect({ address: addr, latitude: lat, longitude: lng });
   };
 
   const onMapClick = useCallback((e: google.maps.MapMouseEvent) => {
@@ -64,7 +52,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
     geocoder.geocode({ location: { lat, lng } }, (results, status) => {
       if (status === 'OK' && results?.[0]) {
         const addr = results[0].formatted_address;
-        validateAndSetLocation(lat, lng, addr, results);
+        setLocationDetails(lat, lng, addr);
       }
     });
   };
@@ -80,13 +68,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
         const addr = place.formatted_address || '';
-        
-        const geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-          if (status === 'OK' && results?.[0]) {
-            validateAndSetLocation(lat, lng, addr, results);
-          }
-        });
+        setLocationDetails(lat, lng, addr);
       }
     }
   };
@@ -114,13 +96,10 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
           <Autocomplete 
             onLoad={onAutocompleteLoad} 
             onPlaceChanged={onPlaceChanged}
-            options={{
-              componentRestrictions: { country: 'IN' }
-            }}
           >
             <input
               type="text"
-              placeholder="Search for a location in India..."
+              placeholder="Search for a location..."
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
@@ -141,7 +120,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
 
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        zoom={5}
+        zoom={2}
         center={marker || center}
         onClick={onMapClick}
         options={{

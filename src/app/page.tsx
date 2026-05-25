@@ -15,7 +15,8 @@ import {
   LayoutDashboard,
   Globe,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { motion } from 'framer-motion';
@@ -38,7 +39,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold">
               C
             </div>
-            <span className="text-xl font-headline font-bold text-slate-900">CivicPulse India</span>
+            <span className="text-xl font-headline font-bold text-slate-900">CivicPulse</span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link href="#features" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Features</Link>
@@ -78,13 +79,13 @@ export default function LandingPage() {
               className="space-y-6"
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold">
-                <Globe size={12} /> Exclusively for India
+                <Globe size={12} /> Smart Governance
               </div>
               <h1 className="text-5xl lg:text-6xl font-headline font-bold text-slate-900 leading-tight">
-                Transforming India's <span className="text-blue-600">Civic Response.</span>
+                Empowering Communities, <span className="text-blue-600">Improving Lives.</span>
               </h1>
               <p className="text-lg text-slate-600 max-w-lg leading-relaxed">
-                Report local issues across Jharkhand, Maharashtra, Delhi, and beyond. Empowering Indian citizens to improve their neighborhood infrastructure in real-time.
+                Report local issues, track municipal progress, and collaborate with city officials to build better neighborhoods together.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-2">
                 <Button size="lg" className="rounded-md px-8 bg-blue-600 hover:bg-blue-700 shadow-md" asChild>
@@ -124,24 +125,24 @@ export default function LandingPage() {
       <section id="features" className="py-24 bg-white">
         <div className="container mx-auto px-6 text-center">
           <div className="max-w-2xl mx-auto mb-16 space-y-4">
-            <h2 className="text-3xl font-headline font-bold text-slate-900">National Civic Intelligence</h2>
-            <p className="text-slate-500">A professional platform designed for Indian municipal accountability and citizen engagement.</p>
+            <h2 className="text-3xl font-headline font-bold text-slate-900">Modern Civic Intelligence</h2>
+            <p className="text-slate-500">A professional platform designed for municipal accountability and high-impact citizen engagement.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 text-left">
             <FeatureCard 
               icon={<ShieldCheck className="h-6 w-6 text-blue-600" />}
-              title="State-Level Tracking"
-              description="Integrated support for Indian states and districts, ensuring reports reach the right municipal department."
+              title="Verified Reporting"
+              description="Our AI-powered system ensures that every report is categorized and prioritized correctly for the relevant department."
             />
             <FeatureCard 
               icon={<MapPin className="h-6 w-6 text-blue-600" />}
-              title="Regional Hotspots"
-              description="Heatmaps focused on Indian urban centers to identify recurring infrastructure bottlenecks."
+              title="Spatial Tracking"
+              description="Visualize civic hotspots and infrastructure needs through interactive maps and high-density heatmaps."
             />
             <FeatureCard 
               icon={<BarChart3 className="h-6 w-6 text-blue-600" />}
-              title="Accountability"
-              description="Track response times of local bodies with full transparency for every PIN code."
+              title="Real-time Accountability"
+              description="Monitor resolution progress and response times of local bodies with complete transparency."
             />
           </div>
         </div>
@@ -152,9 +153,9 @@ export default function LandingPage() {
         <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-slate-900 flex items-center justify-center text-white font-bold text-sm">C</div>
-            <span className="text-lg font-headline font-bold text-slate-900">CivicPulse India</span>
+            <span className="text-lg font-headline font-bold text-slate-900">CivicPulse</span>
           </div>
-          <p className="text-sm text-slate-400">© {new Date().getFullYear()} CivicPulse. Serving Indian Municipalities.</p>
+          <p className="text-sm text-slate-400">© {new Date().getFullYear()} CivicPulse. Modern Smart-City Solutions.</p>
         </div>
       </footer>
     </div>

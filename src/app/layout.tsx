@@ -9,10 +9,10 @@ import React from 'react';
 import { ClientOnly } from '@/components/ClientOnly';
 
 export const metadata: Metadata = {
-  title: 'CivicPulse | Smart City Governance',
+  title: 'CivicPulse | Smart Governance',
   description: 'CivicPulse is a smart civic issue reporting and monitoring platform that enables citizens and administrators to collaborate in resolving public infrastructure and community issues efficiently in real time.',
   openGraph: {
-    title: 'CivicPulse | Smart City Governance',
+    title: 'CivicPulse | Smart Governance',
     description: 'Report, track, and resolve civic issues in real-time.',
     type: 'website',
     images: [

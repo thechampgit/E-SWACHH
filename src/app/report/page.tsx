@@ -187,10 +187,10 @@ export default function ReportPage() {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-headline font-bold text-slate-900">New Report</h1>
-            <p className="text-sm text-slate-500">Exclusively for municipal issues across India.</p>
+            <p className="text-sm text-slate-500">Provide details about the local issue you are experiencing.</p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full text-blue-700 text-[10px] font-bold">
-            <Globe size={12} /> India Only
+            <Globe size={12} /> Verified Location
           </div>
         </div>
 
@@ -200,7 +200,9 @@ export default function ReportPage() {
             <div className="space-y-2">
               <p className="text-sm font-bold text-amber-900">Review Required</p>
               <p className="text-xs text-amber-700">{aiWarning.reason}</p>
-              <Button variant="outline" size="sm" onClick={() => setAiWarning(null)}>Continue Anyway</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setAiWarning(null)}>Continue Anyway</Button>
+              </div>
             </div>
           </div>
         )}
@@ -215,7 +217,7 @@ export default function ReportPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Title</FormLabel>
-                      <FormControl><Input placeholder="E.g., Pothole on MG Road, Bangalore" {...field} /></FormControl>
+                      <FormControl><Input placeholder="E.g., Infrastructure damage at Main St." {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -270,14 +272,14 @@ export default function ReportPage() {
                           {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />} AI Assist
                         </Button>
                       </div>
-                      <FormControl><Textarea placeholder="Provide details including landmarks and district..." className="min-h-[120px]" {...field} /></FormControl>
+                      <FormControl><Textarea placeholder="Provide detailed information including landmarks..." className="min-h-[120px]" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
                 <div className="space-y-4">
-                  <FormLabel className="flex items-center gap-2 font-bold text-slate-700"><MapPin className="h-4 w-4" /> Location (India)</FormLabel>
+                  <FormLabel className="flex items-center gap-2 font-bold text-slate-700"><MapPin className="h-4 w-4" /> Location</FormLabel>
                   <MapProvider>
                     <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
                   </MapProvider>
