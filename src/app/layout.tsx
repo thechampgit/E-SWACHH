@@ -17,17 +17,17 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://picsum.photos/seed/civic-preview/1200/630',
+        url: 'https://picsum.photos/seed/serenity-art/1200/630',
         width: 1200,
         height: 630,
-        alt: 'CivicPulse Preview',
+        alt: 'CivicPulse Serenity Preview',
       },
     ],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
+  themeColor: '#047857',
 };
 
 export default function RootLayout({

@@ -3,27 +3,27 @@
   "placeholderImages": [
     {
       "id": "hero",
-      "description": "Minimalist modern city architecture with clean lines and greenery",
-      "imageUrl": "https://picsum.photos/seed/clean1/1200/600",
-      "imageHint": "clean architecture"
+      "description": "Minimalist artistic urban architecture with serene moss green accents",
+      "imageUrl": "https://picsum.photos/seed/serenity-city/1200/600",
+      "imageHint": "serene city"
     },
     {
       "id": "feature-pothole",
-      "description": "Artistic minimalist road maintenance scene",
-      "imageUrl": "https://picsum.photos/seed/clean2/400/300",
-      "imageHint": "urban cleanup"
+      "description": "Artistic minimalist view of a clean urban street with perfect geometry",
+      "imageUrl": "https://picsum.photos/seed/urban-clean/400/300",
+      "imageHint": "clean street"
     },
     {
       "id": "feature-garbage",
-      "description": "Sleek modern recycling station in a clean urban environment",
-      "imageUrl": "https://picsum.photos/seed/clean3/400/300",
-      "imageHint": "clean recycling"
+      "description": "Sleek and clean artistic representation of environmental order",
+      "imageUrl": "https://picsum.photos/seed/moss-environment/400/300",
+      "imageHint": "clean environment"
     },
     {
       "id": "feature-lighting",
-      "description": "Minimalist urban light installation in a serene park",
-      "imageUrl": "https://picsum.photos/seed/clean4/400/300",
-      "imageHint": "minimalist light"
+      "description": "Atmospheric and artistic lighting in a serene public garden",
+      "imageUrl": "https://picsum.photos/seed/serene-nature/400/300",
+      "imageHint": "serene nature"
     }
   ]
 }
