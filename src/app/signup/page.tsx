@@ -67,7 +67,8 @@ export default function SignupPage() {
         createdAt: new Date().toISOString(),
       };
 
-      await setDoc(doc(db, 'users', user.uid), userData)
+      // Non-blocking write with contextual error handling
+      setDoc(doc(db, 'users', user.uid), userData)
         .catch(async (error) => {
           const permissionError = new FirestorePermissionError({
             path: `/users/${user.uid}`,
@@ -99,7 +100,6 @@ export default function SignupPage() {
           description: error.message,
         });
       }
-    } finally {
       setIsLoading(false);
     }
   };

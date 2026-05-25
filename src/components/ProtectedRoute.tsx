@@ -28,12 +28,13 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const loading = authLoading || (!!user && docLoading);
 
   useEffect(() => {
+    // Increased timeout to 15s to accommodate slow network/cold starts
     const timer = setTimeout(() => {
       if (loading) {
-        console.warn('ProtectedRoute: Auth or Doc loading timed out after 10s');
+        console.warn('ProtectedRoute: Auth or Doc loading timed out after 15s');
         setTimedOut(true);
       }
-    }, 10000);
+    }, 15000);
 
     return () => clearTimeout(timer);
   }, [loading]);
@@ -41,10 +42,8 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        console.log('ProtectedRoute: No user, redirecting to /login');
         router.push('/login');
       } else if (requiredRole && userData && userData.role !== requiredRole) {
-        console.log(`ProtectedRoute: Role mismatch. Required: ${requiredRole}, Got: ${userData.role}`);
         if (userData.role === 'admin') {
           router.push('/admin');
         } else {
@@ -59,7 +58,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
         <AlertCircle className="h-12 w-12 text-orange-500 mb-4" />
         <h2 className="text-xl font-bold text-slate-900 mb-2">Connection is taking longer than expected</h2>
-        <p className="text-slate-500 mb-6 max-w-sm">We're having trouble reaching the governance servers. Please check your connection or try again.</p>
+        <p className="text-slate-500 mb-6 max-w-sm">We're having trouble reaching the governance servers. This might be due to a slow connection.</p>
         <Button onClick={() => window.location.reload()} className="gap-2">
           <RefreshCcw size={16} /> Retry Connection
         </Button>

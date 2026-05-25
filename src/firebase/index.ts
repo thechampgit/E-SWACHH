@@ -6,11 +6,18 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getMessaging, Messaging, isSupported, getToken } from 'firebase/messaging';
 import { firebaseConfig } from './config';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 
 /**
  * Initializes Firebase services safely using a singleton pattern.
+ * Core services (App, Auth, Firestore, Storage) are initialized immediately.
+ * Messaging is handled as an optional, secondary service.
  */
+let cachedApp: FirebaseApp | null = null;
+let cachedDb: Firestore | null = null;
+let cachedAuth: Auth | null = null;
+let cachedStorage: FirebaseStorage | null = null;
+
 export function initializeFirebase(): { 
   app: FirebaseApp | null; 
   db: Firestore | null; 
@@ -18,44 +25,39 @@ export function initializeFirebase(): {
   storage: FirebaseStorage | null;
   messaging: Messaging | null;
 } {
-  // Protective check: Ensure we have a valid API Key
-  if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "" || firebaseConfig.apiKey.includes("your-api-key")) {
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "") {
     return { app: null, db: null, auth: null, storage: null, messaging: null };
   }
 
   try {
-    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    
-    // Initialize production services
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const storage = getStorage(app);
-    
-    let messaging: Messaging | null = null;
-    
-    if (typeof window !== 'undefined') {
-      isSupported().then(supported => {
-        if (supported && !messaging) {
-          try {
-            messaging = getMessaging(app);
-          } catch (e) {
-            console.warn('FCM not initialized:', e);
-          }
-        }
-      });
+    if (!cachedApp) {
+      cachedApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+      cachedDb = getFirestore(cachedApp);
+      cachedAuth = getAuth(cachedApp);
+      cachedStorage = getStorage(cachedApp);
     }
-
-    return { app, db, auth, storage, messaging };
+    
+    return { 
+      app: cachedApp, 
+      db: cachedDb, 
+      auth: cachedAuth, 
+      storage: cachedStorage, 
+      messaging: null // Messaging will be handled by requestNotificationPermission on demand
+    };
   } catch (error) {
     console.error("Firebase Initialization Error:", error);
     return { app: null, db: null, auth: null, storage: null, messaging: null };
   }
 }
 
-export async function requestNotificationPermission(messaging: Messaging | null) {
-  if (!messaging || typeof window === 'undefined') return null;
+export async function requestNotificationPermission(app: FirebaseApp | null) {
+  if (!app || typeof window === 'undefined') return null;
   
   try {
+    const supported = await isSupported();
+    if (!supported) return null;
+
+    const messaging = getMessaging(app);
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       if (!firebaseConfig.vapidKey) return null;

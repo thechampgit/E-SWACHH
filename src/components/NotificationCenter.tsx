@@ -11,7 +11,7 @@ import {
   updateDoc, 
   writeBatch 
 } from 'firebase/firestore';
-import { useFirestore, useUser, useCollection, useMessaging, requestNotificationPermission } from '@/firebase';
+import { useFirestore, useUser, useCollection, useFirebaseApp, requestNotificationPermission } from '@/firebase';
 import { 
   Bell, 
   Inbox, 
@@ -38,17 +38,18 @@ import { formatDistanceToNow } from 'date-fns';
 export function NotificationCenter() {
   const db = useFirestore();
   const { user } = useUser();
-  const messaging = useMessaging();
+  const app = useFirebaseApp();
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (user && messaging) {
-      requestNotificationPermission(messaging);
+    if (user && app) {
+      // Lazy request to avoid blocking initial load
+      requestNotificationPermission(app);
     }
-  }, [user, messaging]);
+  }, [user, app]);
 
   const notificationsQuery = useMemo(() => {
-    if (!user) return null;
+    if (!user || !db) return null;
     return query(
       collection(db, 'notifications'),
       where('userId', '==', user.uid),
@@ -65,7 +66,7 @@ export function NotificationCenter() {
 
   const handleMarkAsRead = async (notificationId: string) => {
     const ref = doc(db, 'notifications', notificationId);
-    await updateDoc(ref, { read: true });
+    updateDoc(ref, { read: true });
   };
 
   const handleMarkAllAsRead = async () => {
@@ -75,7 +76,7 @@ export function NotificationCenter() {
       const ref = doc(db, 'notifications', n.id);
       batch.update(ref, { read: true });
     });
-    await batch.commit();
+    batch.commit();
   };
 
   const getIcon = (type: string) => {
