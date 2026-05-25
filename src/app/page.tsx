@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -36,14 +35,14 @@ export default function LandingPage() {
       <nav className="fixed top-0 z-[100] w-full border-b bg-white/80 backdrop-blur-md">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold">
+            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold">
               C
             </div>
             <span className="text-xl font-headline font-bold text-slate-900">CivicPulse</span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Features</Link>
-            <Link href="/map" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Impact Map</Link>
+            <Link href="#features" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">Features</Link>
+            <Link href="/map" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">Impact Map</Link>
             <div className="flex items-center gap-4 ml-4">
               {user ? (
                 <>
@@ -70,7 +69,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 lg:pt-48 lg:pb-32 bg-slate-50">
+      <section className="pt-32 pb-20 lg:pt-48 lg:pb-32 bg-slate-50/50">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div 
@@ -78,22 +77,22 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary border border-primary/10 text-primary text-xs font-bold">
                 <Globe size={12} /> Smart Governance
               </div>
               <h1 className="text-5xl lg:text-6xl font-headline font-bold text-slate-900 leading-tight">
-                Empowering Communities, <span className="text-blue-600">Improving Lives.</span>
+                Empowering Communities, <span className="text-primary">Improving Lives.</span>
               </h1>
               <p className="text-lg text-slate-600 max-w-lg leading-relaxed">
                 Report local issues, track municipal progress, and collaborate with city officials to build better neighborhoods together.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                <Button size="lg" className="rounded-md px-8 bg-blue-600 hover:bg-blue-700 shadow-md" asChild>
+                <Button size="lg" className="rounded-md px-8 shadow-md" asChild>
                   <Link href="/report">
                     <PlusCircle className="mr-2 h-5 w-5" /> Report Issue
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg" className="rounded-md px-8" asChild>
+                <Button variant="outline" size="lg" className="rounded-md px-8 border-primary/20 text-primary hover:bg-primary/5" asChild>
                   <Link href="/map">
                     View Impact Map
                   </Link>
@@ -130,17 +129,17 @@ export default function LandingPage() {
           </div>
           <div className="grid md:grid-cols-3 gap-8 text-left">
             <FeatureCard 
-              icon={<ShieldCheck className="h-6 w-6 text-blue-600" />}
+              icon={<ShieldCheck className="h-6 w-6 text-primary" />}
               title="Verified Reporting"
               description="Our AI-powered system ensures that every report is categorized and prioritized correctly for the relevant department."
             />
             <FeatureCard 
-              icon={<MapPin className="h-6 w-6 text-blue-600" />}
+              icon={<MapPin className="h-6 w-6 text-primary" />}
               title="Spatial Tracking"
               description="Visualize civic hotspots and infrastructure needs through interactive maps and high-density heatmaps."
             />
             <FeatureCard 
-              icon={<BarChart3 className="h-6 w-6 text-blue-600" />}
+              icon={<BarChart3 className="h-6 w-6 text-primary" />}
               title="Real-time Accountability"
               description="Monitor resolution progress and response times of local bodies with complete transparency."
             />
@@ -149,7 +148,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t bg-slate-50">
+      <footer className="py-12 border-t bg-slate-50/50">
         <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-slate-900 flex items-center justify-center text-white font-bold text-sm">C</div>
@@ -164,8 +163,8 @@ export default function LandingPage() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
   return (
-    <div className="p-8 rounded-xl border border-slate-100 bg-white hover:border-blue-200 transition-all shadow-sm">
-      <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center mb-6">
+    <div className="p-8 rounded-xl border border-slate-100 bg-white hover:border-primary/20 transition-all shadow-sm">
+      <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center mb-6">
         {icon}
       </div>
       <h3 className="text-lg font-bold mb-2 text-slate-900">{title}</h3>

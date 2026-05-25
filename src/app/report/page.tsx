@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -189,7 +188,7 @@ export default function ReportPage() {
             <h1 className="text-2xl font-headline font-bold text-slate-900">New Report</h1>
             <p className="text-sm text-slate-500">Provide details about the local issue you are experiencing.</p>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full text-blue-700 text-[10px] font-bold">
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-secondary border border-primary/10 rounded-full text-primary text-[10px] font-bold">
             <Globe size={12} /> Verified Location
           </div>
         </div>
@@ -268,7 +267,7 @@ export default function ReportPage() {
                     <FormItem>
                       <div className="flex items-center justify-between">
                         <FormLabel>Description</FormLabel>
-                        <Button type="button" variant="ghost" size="sm" className="text-blue-600 h-auto p-0 font-bold text-xs" onClick={handleAiCategorize} disabled={isAnalyzing}>
+                        <Button type="button" variant="ghost" size="sm" className="text-primary h-auto p-0 font-bold text-xs hover:bg-transparent" onClick={handleAiCategorize} disabled={isAnalyzing}>
                           {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />} AI Assist
                         </Button>
                       </div>
@@ -303,7 +302,7 @@ export default function ReportPage() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full h-11 text-sm font-bold bg-blue-600 hover:bg-blue-700 shadow-md" disabled={isSubmitting}>
+                <Button type="submit" className="w-full h-11 text-sm font-bold shadow-md" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Submit Report"}
                 </Button>
               </form>
