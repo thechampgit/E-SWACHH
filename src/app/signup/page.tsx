@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -29,7 +29,14 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) return;
+    if (!auth || !db) {
+      toast({
+        variant: "destructive",
+        title: "Connection Error",
+        description: "Firebase service is not initialized. Please refresh the page.",
+      });
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast({
@@ -56,7 +63,7 @@ export default function SignupPage() {
         createdAt: new Date().toISOString(),
       };
 
-      setDoc(doc(db, 'users', user.uid), userData)
+      await setDoc(doc(db, 'users', user.uid), userData)
         .catch(async (error) => {
           const permissionError = new FirestorePermissionError({
             path: `/users/${user.uid}`,
@@ -72,10 +79,23 @@ export default function SignupPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
+      console.error("Signup error:", error.code, error.message);
+      let message = error.message;
+      
+      if (error.code === 'auth/configuration-not-found') {
+        message = "Email/Password sign-in is not enabled in the Firebase Console. Please contact the administrator.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        message = "This email is already registered.";
+      } else if (error.code === 'auth/invalid-email') {
+        message = "Please enter a valid email address.";
+      } else if (error.code === 'auth/weak-password') {
+        message = "Password should be at least 6 characters.";
+      }
+
       toast({
         variant: "destructive",
         title: "Signup failed",
-        description: error.message,
+        description: message,
       });
     } finally {
       setIsLoading(false);
@@ -124,13 +144,16 @@ export default function SignupPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-4">
           <p className="text-sm text-center w-full text-muted-foreground">
             Already have an account?{' '}
             <Link href="/login" className="text-primary hover:underline font-bold">
               Log in
             </Link>
           </p>
+          <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 uppercase font-bold tracking-widest pt-4 border-t w-full">
+            <ShieldCheck size={12} /> Secure Governance Protocol
+          </div>
         </CardFooter>
       </Card>
     </div>

@@ -19,8 +19,7 @@ export function initializeFirebase(): {
   messaging: Messaging | null;
 } {
   // Protective check: Ensure we have a valid API Key
-  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("your-api-key")) {
-    console.warn("Firebase API Key is missing. Delaying initialization.");
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "" || firebaseConfig.apiKey.includes("your-api-key")) {
     return { app: null, db: null, auth: null, storage: null, messaging: null };
   }
 
