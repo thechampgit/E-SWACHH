@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "User": {
@@ -35,8 +34,19 @@
           },
           "required": ["address", "latitude", "longitude"]
         },
-        "priority": { "type": "string", "enum": ["Low", "Medium", "High"] },
+        "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"] },
         "status": { "type": "string", "enum": ["Pending", "In Review", "Assigned", "In Progress", "Resolved"] },
+        "aiAnalysis": {
+          "type": "object",
+          "properties": {
+            "category": { "type": "string" },
+            "priority": { "type": "string" },
+            "summary": { "type": "string" },
+            "isSuspicious": { "type": "boolean" },
+            "moderationReason": { "type": "string" },
+            "confidence": { "type": "number" }
+          }
+        },
         "adminRemarks": { "type": "string" },
         "assignedTo": { "type": "string" },
         "resolvedAt": { "type": "string", "format": "date-time" },

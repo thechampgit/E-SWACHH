@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
+import { AiChatbot } from '@/components/AiChatbot';
 
 export default function RootLayout({
   children,
@@ -31,6 +32,7 @@ export default function RootLayout({
         <GlobalErrorBoundary>
           <FirebaseClientProvider>
             {children}
+            <AiChatbot />
             <Toaster />
           </FirebaseClientProvider>
         </GlobalErrorBoundary>

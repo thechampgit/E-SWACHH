@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -26,16 +25,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AlertCircle, Camera, Loader2, MapPin, Sparkles, X } from 'lucide-react';
+import { AlertCircle, Camera, Loader2, MapPin, Sparkles, X, ShieldAlert } from 'lucide-react';
 import { categorizeComplaint } from '@/ai/flows/ai-complaint-categorization';
+import { aiComplaintModeration } from '@/ai/flows/ai-complaint-moderation';
 import { toast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useFirestore, useStorage, useUser } from '@/firebase';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { MapProvider } from '@/components/MapProvider';
 import { LocationPicker } from '@/components/LocationPicker';
+import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters." }),
@@ -46,7 +45,7 @@ const formSchema = z.object({
     latitude: z.number(),
     longitude: z.number(),
   }),
-  priority: z.enum(['Low', 'Medium', 'High']),
+  priority: z.enum(['Low', 'Medium', 'High', 'Critical']),
 });
 
 export default function ReportPage() {
@@ -58,6 +57,7 @@ export default function ReportPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [aiWarning, setAiWarning] = useState<{ isSuspicious: boolean; reason: string } | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -73,29 +73,19 @@ export default function ReportPage() {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please upload an image smaller than 5MB.",
-          variant: "destructive",
-        });
+        toast({ title: "File too large", description: "Image must be under 5MB.", variant: "destructive" });
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
   const handleAiCategorize = async () => {
     const description = form.getValues('description');
-    if (!description || description.length < 10) {
-      toast({
-        title: "Insufficient information",
-        description: "Please provide a brief description before using AI analysis.",
-        variant: "destructive",
-      });
+    if (!description || description.length < 15) {
+      toast({ title: "More info needed", description: "Describe the issue first.", variant: "destructive" });
       return;
     }
 
@@ -108,31 +98,40 @@ export default function ReportPage() {
 
       if (result) {
         form.setValue('category', result.category);
-        form.setValue('priority', result.priority);
-        toast({
-          title: "AI Analysis Complete",
-          description: `Suggested Category: ${result.category}, Priority: ${result.priority}`,
-        });
+        form.setValue('priority', result.priority as any);
+        toast({ title: "AI Categorized", description: `Selected: ${result.category}` });
       }
     } catch (error) {
-      toast({
-        title: "AI Analysis Failed",
-        description: "We couldn't analyze the report at this time.",
-        variant: "destructive",
-      });
+      console.error(error);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) {
-      toast({ title: "Auth Required", description: "You must be logged in to report.", variant: "destructive" });
-      return;
-    }
+    if (!user) return;
 
     setIsSubmitting(true);
     try {
+      // First, run moderation
+      const moderation = await aiComplaintModeration({
+        title: values.title,
+        description: values.description,
+        category: values.category,
+        imageUrl: imagePreview || undefined
+      });
+
+      if (moderation.isSuspicious && !aiWarning) {
+        setAiWarning({ isSuspicious: true, reason: moderation.reason });
+        setIsSubmitting(false);
+        toast({
+          variant: "destructive",
+          title: "AI Quality Warning",
+          description: "Our AI detected potential issues with this report. Please review the warning above."
+        });
+        return;
+      }
+
       let imageUrl = "";
       if (imagePreview) {
         const storageRef = ref(storage, `complaints/${user.uid}/${Date.now()}`);
@@ -143,38 +142,36 @@ export default function ReportPage() {
       const complaintData = {
         ...values,
         userId: user.uid,
-        userName: user.displayName || "Anonymous Citizen",
+        userName: user.displayName || "Citizen",
         imageUrl,
         status: "Pending",
+        aiAnalysis: {
+          category: values.category,
+          priority: values.priority,
+          isSuspicious: moderation.isSuspicious,
+          moderationReason: moderation.reason,
+          confidence: moderation.confidenceScore
+        },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
       const docRef = await addDoc(collection(db, "complaints"), complaintData);
 
-      // Create initial notification for the user
       await addDoc(collection(db, "notifications"), {
         userId: user.uid,
-        title: "Report Submitted",
-        message: `Your report "${values.title}" has been successfully logged. ID: ${docRef.id.substring(0, 8)}`,
+        title: "Report Logged",
+        message: `Your report "${values.title}" has been successfully submitted and is under review.`,
         type: "success",
         complaintId: docRef.id,
         read: false,
         createdAt: serverTimestamp()
       });
 
-      toast({
-        title: "Report Submitted",
-        description: `Thank you for your contribution. Your report ID is ${docRef.id.substring(0, 8)}`,
-      });
-
+      toast({ title: "Success", description: "Issue reported successfully." });
       router.push(`/track/${docRef.id}`);
     } catch (error) {
-      toast({
-        title: "Submission Error",
-        description: "There was an error saving your report. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to submit report.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -186,19 +183,32 @@ export default function ReportPage() {
         <div className="mb-8 flex items-center justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-headline font-bold text-slate-900">Report Civic Issue</h1>
-            <p className="text-muted-foreground">Submit a report to help improve our community.</p>
+            <p className="text-muted-foreground">AI-assisted reporting for faster city response.</p>
           </div>
           <Button variant="ghost" onClick={() => router.back()}>Cancel</Button>
         </div>
 
+        {aiWarning && (
+          <Card className="mb-6 border-orange-200 bg-orange-50/50">
+            <CardContent className="p-4 flex gap-3">
+              <ShieldAlert className="text-orange-500 shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-orange-900">AI Quality Warning</p>
+                <p className="text-xs text-orange-700 mt-1">{aiWarning.reason}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-3 text-[10px] h-7 bg-white"
+                  onClick={() => setAiWarning(null)}
+                >
+                  Edit Report Details
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="border-none shadow-lg">
-          <CardHeader className="border-b bg-white">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-primary" />
-              Issue Details
-            </CardTitle>
-            <CardDescription>Fill out the form below with as much detail as possible.</CardDescription>
-          </CardHeader>
           <CardContent className="p-6 bg-white">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -207,9 +217,9 @@ export default function ReportPage() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Complaint Title</FormLabel>
+                      <FormLabel>Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Pothole on Main St" {...field} />
+                        <Input placeholder="What is the issue?" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -224,22 +234,13 @@ export default function ReportPage() {
                       <FormItem>
                         <FormLabel>Category</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
+                          <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent>
-                            <SelectItem value="Road Damage">Road Damage</SelectItem>
-                            <SelectItem value="Garbage">Garbage</SelectItem>
-                            <SelectItem value="Water Supply">Water Supply</SelectItem>
-                            <SelectItem value="Electricity">Electricity</SelectItem>
-                            <SelectItem value="Streetlight">Streetlight</SelectItem>
-                            <SelectItem value="Drainage">Drainage</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
+                            {['Road Damage', 'Garbage', 'Water Supply', 'Electricity', 'Streetlight', 'Drainage', 'Other'].map(c => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -249,20 +250,15 @@ export default function ReportPage() {
                     name="priority"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Priority Level</FormLabel>
+                        <FormLabel>Priority</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select priority" />
-                            </SelectTrigger>
-                          </FormControl>
+                          <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent>
-                            <SelectItem value="Low">Low</SelectItem>
-                            <SelectItem value="Medium">Medium</SelectItem>
-                            <SelectItem value="High">High</SelectItem>
+                            {['Low', 'Medium', 'High', 'Critical'].map(p => (
+                              <SelectItem key={p} value={p}>{p}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -277,79 +273,52 @@ export default function ReportPage() {
                         <FormLabel>Description</FormLabel>
                         <Button 
                           type="button" 
-                          variant="outline" 
+                          variant="ghost" 
                           size="sm" 
-                          className="h-7 text-xs flex items-center gap-1 text-primary border-primary/20 bg-primary/5 hover:bg-primary/10"
+                          className="h-7 text-[10px] font-bold text-primary flex gap-1 items-center hover:bg-primary/5"
                           onClick={handleAiCategorize}
                           disabled={isAnalyzing}
                         >
                           {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                          AI Suggest Category
+                          AI Assistant
                         </Button>
                       </div>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Please provide details about the extent of damage and how it's affecting the community." 
-                          className="min-h-[120px]"
-                          {...field} 
-                        />
+                        <Textarea placeholder="Explain the situation..." className="min-h-[120px]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="space-y-4 pt-4 border-t">
-                  <FormLabel className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" /> Pinpoint Location
-                  </FormLabel>
+                <div className="pt-4 border-t">
+                  <FormLabel className="mb-4 block"><MapPin className="inline mr-2 h-4 w-4" /> Issue Location</FormLabel>
                   <MapProvider>
-                    <LocationPicker 
-                      onLocationSelect={(loc) => form.setValue('location', loc)}
-                    />
+                    <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
                   </MapProvider>
-                  {form.formState.errors.location && (
-                    <p className="text-xs font-medium text-destructive">Please select a location on the map.</p>
-                  )}
                 </div>
 
-                <div className="space-y-2 pt-4 border-t">
-                  <FormLabel>Photo Evidence</FormLabel>
+                <div className="pt-4 border-t">
+                  <FormLabel className="mb-4 block"><Camera className="inline mr-2 h-4 w-4" /> Visual Evidence</FormLabel>
                   {!imagePreview ? (
-                    <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Camera className="w-10 h-10 mb-3 text-slate-400" />
-                          <p className="mb-2 text-sm text-slate-500 font-medium">Click to upload photo</p>
-                          <p className="text-xs text-slate-400">PNG, JPG or JPEG (MAX. 5MB)</p>
-                        </div>
-                        <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-                      </label>
-                    </div>
+                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100">
+                      <Camera className="w-8 h-8 text-slate-300" />
+                      <span className="text-xs text-slate-500 mt-2">Upload Photo</span>
+                      <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                    </label>
                   ) : (
-                    <div className="relative w-full h-64 rounded-lg overflow-hidden group shadow-md border">
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                      <button 
-                        type="button"
-                        onClick={() => setImagePreview(null)}
-                        className="absolute top-4 right-4 p-2 bg-white/90 rounded-full shadow-lg hover:bg-white text-destructive transition-colors"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
+                    <div className="relative h-60 rounded-xl overflow-hidden shadow-sm">
+                      <img src={imagePreview} className="w-full h-full object-cover" />
+                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8" onClick={() => setImagePreview(null)}>
+                        <X size={14} />
+                      </Button>
                     </div>
                   )}
                 </div>
 
-                <div className="pt-6 border-t">
-                  <Button type="submit" className="w-full h-12 text-lg font-bold" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Submitting Report...
-                      </>
-                    ) : "Submit Report"}
-                  </Button>
-                </div>
+                <Button type="submit" className="w-full h-12 text-md font-bold" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : "Submit Report"}
+                </Button>
               </form>
             </Form>
           </CardContent>
