@@ -205,107 +205,109 @@ export default function ReportPage() {
         )}
 
         <Card className="border-none shadow-xl bg-white p-8">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Brief Title</FormLabel>
-                    <FormControl><Input placeholder="Clear and concise..." {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid md:grid-cols-2 gap-6">
+          <CardContent className="p-0 pt-0">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {['Road Damage', 'Garbage', 'Water Supply', 'Electricity', 'Streetlight', 'Drainage', 'Other'].map(c => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Brief Title</FormLabel>
+                      <FormControl><Input placeholder="Clear and concise..." {...field} /></FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                <div className="grid md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {['Road Damage', 'Garbage', 'Water Supply', 'Electricity', 'Streetlight', 'Drainage', 'Other'].map(c => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Impact Level</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {['Low', 'Medium', 'High', 'Critical'].map(p => (
+                              <SelectItem key={p} value={p}>{p}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
-                  name="priority"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Impact Level</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {['Low', 'Medium', 'High', 'Critical'].map(p => (
-                            <SelectItem key={p} value={p}>{p}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Detailed Narrative</FormLabel>
+                        <Button type="button" variant="ghost" size="sm" className="text-primary gap-1 font-bold text-xs" onClick={handleAiCategorize} disabled={isAnalyzing}>
+                          {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} Smart Fill
+                        </Button>
+                      </div>
+                      <FormControl><Textarea placeholder="Describe the severity and impact..." className="min-h-[120px]" {...field} /></FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Detailed Narrative</FormLabel>
-                      <Button type="button" variant="ghost" size="sm" className="text-primary gap-1 font-bold text-xs" onClick={handleAiCategorize} disabled={isAnalyzing}>
-                        {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} Smart Fill
+                <div className="pt-4 border-t">
+                  <FormLabel className="mb-4 block"><MapPin className="inline mr-2 h-4 w-4" /> Pinpoint Location</FormLabel>
+                  <MapProvider>
+                    <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
+                  </MapProvider>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <FormLabel className="mb-4 block"><Camera className="inline mr-2 h-4 w-4" /> Photographic Proof</FormLabel>
+                  {!imagePreview ? (
+                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100">
+                      <Camera className="w-8 h-8 text-slate-300" />
+                      <span className="text-xs text-slate-500 mt-2">Upload Visual Evidence</span>
+                      <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                    </label>
+                  ) : (
+                    <div className="relative h-60 rounded-xl overflow-hidden shadow-sm">
+                      <img src={imagePreview} className="w-full h-full object-cover" />
+                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8" onClick={() => setImagePreview(null)}>
+                        <X size={14} />
                       </Button>
                     </div>
-                    <FormControl><Textarea placeholder="Describe the severity and impact..." className="min-h-[120px]" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  )}
+                </div>
 
-              <div className="pt-4 border-t">
-                <FormLabel className="mb-4 block"><MapPin className="inline mr-2 h-4 w-4" /> Pinpoint Location</FormLabel>
-                <MapProvider>
-                  <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
-                </MapProvider>
-              </div>
-
-              <div className="pt-4 border-t">
-                <FormLabel className="mb-4 block"><Camera className="inline mr-2 h-4 w-4" /> Photographic Proof</FormLabel>
-                {!imagePreview ? (
-                  <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100">
-                    <Camera className="w-8 h-8 text-slate-300" />
-                    <span className="text-xs text-slate-500 mt-2">Upload Visual Evidence</span>
-                    <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-                  </label>
-                ) : (
-                  <div className="relative h-60 rounded-xl overflow-hidden shadow-sm">
-                    <img src={imagePreview} className="w-full h-full object-cover" />
-                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8" onClick={() => setImagePreview(null)}>
-                      <X size={14} />
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <Button type="submit" className="w-full h-12 text-md font-bold rounded-full shadow-lg" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : "Initiate Governance Track"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <Button type="submit" className="w-full h-12 text-md font-bold rounded-full shadow-lg" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : "Initiate Governance Track"}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
