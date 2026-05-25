@@ -1,15 +1,15 @@
+
 "use client"
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
-import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { useFirestore, useCollection, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   PlusCircle, 
-  Search, 
   Map as MapIcon, 
   Clock, 
   CheckCircle2, 
@@ -17,34 +17,45 @@ import {
   ArrowUpRight,
   TrendingUp,
   LayoutGrid,
-  Filter
+  Filter,
+  MapPin,
+  LogOut
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
-  const [complaints, setComplaints] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const db = useFirestore();
+  const auth = useAuth();
+  const { user } = useUser();
+  const router = useRouter();
 
-  useEffect(() => {
-    const q = query(collection(db, "complaints"), orderBy("createdAt", "desc"), limit(20));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setComplaints(docs);
-      setLoading(false);
-    });
-    return () => unsub();
-  }, []);
+  const complaintsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, "complaints"), orderBy("createdAt", "desc"), limit(20));
+  }, [db]);
 
-  const stats = {
-    total: complaints.length,
-    resolved: complaints.filter(c => c.status === "Resolved").length,
-    pending: complaints.filter(c => c.status === "Pending").length,
-    active: complaints.filter(c => !["Resolved", "Pending"].includes(c.status)).length
+  const { data: complaints, loading } = useCollection(complaintsQuery);
+
+  const stats = useMemo(() => {
+    if (!complaints) return { total: 0, resolved: 0, pending: 0 };
+    return {
+      total: complaints.length,
+      resolved: complaints.filter(c => c.status === "Resolved").length,
+      pending: complaints.filter(c => c.status === "Pending").length,
+    };
+  }, [complaints]);
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    await signOut(auth);
+    router.push('/');
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -64,21 +75,22 @@ export default function DashboardPage() {
                 <PlusCircle className="mr-2 h-4 w-4" /> New Report
               </Link>
             </Button>
-            <div className="w-8 h-8 rounded-full bg-slate-200 border flex items-center justify-center text-xs font-bold">
-              JD
-            </div>
+            <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="flex-1 container mx-auto px-4 py-8 space-y-8">
-        {/* Welcome & Stats */}
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1">
             <div className="bg-primary rounded-2xl p-8 text-white relative overflow-hidden">
               <div className="relative z-10 space-y-4">
-                <h1 className="text-3xl font-headline font-bold">Welcome back, Citizen!</h1>
-                <p className="text-primary-foreground/80 max-w-md">Your contributions are making our city better every day. Check the status of your reported issues below.</p>
+                <h1 className="text-3xl font-headline font-bold">
+                  Welcome back, {user?.displayName || 'Citizen'}!
+                </h1>
+                <p className="text-primary-foreground/80 max-w-md">Your contributions are making our city better every day.</p>
                 <div className="flex gap-4 pt-2">
                   <Button variant="secondary" size="lg" asChild>
                     <Link href="/report">Report New Issue</Link>
@@ -98,7 +110,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Complaints Listing */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-headline font-bold text-slate-900">Recent Reports</h2>
@@ -121,7 +132,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-center py-20">
                   <Clock className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              ) : complaints.length === 0 ? (
+              ) : !complaints || complaints.length === 0 ? (
                 <Card className="border-2 border-dashed p-12 text-center bg-white">
                   <div className="flex flex-col items-center gap-4">
                     <AlertCircle className="h-12 w-12 text-slate-300" />
@@ -140,7 +151,6 @@ export default function DashboardPage() {
                 </div>
               )}
             </TabsContent>
-            {/* Other tabs would filter the same data */}
           </Tabs>
         </div>
       </main>
@@ -211,5 +221,3 @@ function ComplaintCard({ complaint }: any) {
     </Card>
   );
 }
-
-import { MapPin } from 'lucide-react';
