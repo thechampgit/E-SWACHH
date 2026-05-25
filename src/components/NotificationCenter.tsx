@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
   collection, 
   query, 
@@ -12,15 +11,13 @@ import {
   updateDoc, 
   writeBatch 
 } from 'firebase/firestore';
-import { useFirestore, useUser, useCollection } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMessaging, requestNotificationPermission } from '@/firebase';
 import { 
   Bell, 
-  Check, 
   Inbox, 
   AlertTriangle, 
   Info, 
   CheckCircle, 
-  Trash2,
   ExternalLink
 } from 'lucide-react';
 import {
@@ -41,7 +38,14 @@ import { formatDistanceToNow } from 'date-fns';
 export function NotificationCenter() {
   const db = useFirestore();
   const { user } = useUser();
+  const messaging = useMessaging();
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (user && messaging) {
+      requestNotificationPermission(messaging);
+    }
+  }, [user, messaging]);
 
   const notificationsQuery = useMemo(() => {
     if (!user) return null;

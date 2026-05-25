@@ -1,11 +1,10 @@
-
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
-import { getMessaging, Messaging, isSupported } from 'firebase/messaging';
+import { getMessaging, Messaging, isSupported, getToken } from 'firebase/messaging';
 import { firebaseConfig } from './config';
 
 export function initializeFirebase(): { 
@@ -20,15 +19,37 @@ export function initializeFirebase(): {
   const auth = getAuth(app);
   const storage = getStorage(app);
   
-  // Messaging is not supported in all environments (e.g. some SSR or private browsing)
   let messaging: Messaging | null = null;
   if (typeof window !== 'undefined') {
     isSupported().then(supported => {
-      if (supported) messaging = getMessaging(app);
+      if (supported) {
+        messaging = getMessaging(app);
+      }
     });
   }
 
   return { app, db, auth, storage, messaging };
+}
+
+export async function requestNotificationPermission(messaging: Messaging | null) {
+  if (!messaging) return null;
+  
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      const token = await getToken(messaging, {
+        vapidKey: firebaseConfig.vapidKey
+      });
+      if (token) {
+        console.log('FCM Token:', token);
+        // In a real app, you would save this token to the user's Firestore document
+        return token;
+      }
+    }
+  } catch (error) {
+    console.error('Error requesting notification permission:', error);
+  }
+  return null;
 }
 
 export * from './provider';
