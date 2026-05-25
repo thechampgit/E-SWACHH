@@ -1,3 +1,4 @@
+
 'use client';
 
 /**
@@ -16,8 +17,14 @@ export const firebaseConfig = {
 };
 
 // Diagnostic check to help the user identify missing configuration
-if (typeof window !== 'undefined' && !firebaseConfig.apiKey) {
-  console.warn(
-    "Firebase configuration is missing. Please ensure your environment variables (NEXT_PUBLIC_FIREBASE_*) are set in the Firebase Studio settings."
-  );
+if (typeof window !== 'undefined') {
+  const missing = [];
+  if (!firebaseConfig.apiKey) missing.push("API Key");
+  if (!firebaseConfig.projectId) missing.push("Project ID");
+  
+  if (missing.length > 0) {
+    console.warn(
+      `CivicPulse: Firebase config missing [${missing.join(", ")}]. Please set your NEXT_PUBLIC_FIREBASE_* variables.`
+    );
+  }
 }
