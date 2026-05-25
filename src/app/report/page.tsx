@@ -34,12 +34,18 @@ import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useFirestore, useStorage, useUser } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { MapProvider } from '@/components/MapProvider';
+import { LocationPicker } from '@/components/LocationPicker';
 
 const formSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters." }),
   category: z.string(),
   description: z.string().min(20, { message: "Please provide a more detailed description." }),
-  location: z.string().min(5, { message: "Please provide a valid location or landmark." }),
+  location: z.object({
+    address: z.string().min(5),
+    latitude: z.number(),
+    longitude: z.number(),
+  }),
   priority: z.enum(['Low', 'Medium', 'High']),
 });
 
@@ -59,7 +65,6 @@ export default function ReportPage() {
       title: "",
       category: "Other",
       description: "",
-      location: "",
       priority: "Medium",
     },
   });
@@ -282,7 +287,7 @@ export default function ReportPage() {
                       </div>
                       <FormControl>
                         <Textarea 
-                          placeholder="Please provide details about the location, extent of damage, and how it's affecting the community." 
+                          placeholder="Please provide details about the extent of damage and how it's affecting the community." 
                           className="min-h-[120px]"
                           {...field} 
                         />
@@ -292,24 +297,21 @@ export default function ReportPage() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location / Landmark</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input placeholder="Enter address or nearby landmark" className="pl-10" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-4 pt-4 border-t">
+                  <FormLabel className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" /> Pinpoint Location
+                  </FormLabel>
+                  <MapProvider>
+                    <LocationPicker 
+                      onLocationSelect={(loc) => form.setValue('location', loc)}
+                    />
+                  </MapProvider>
+                  {form.formState.errors.location && (
+                    <p className="text-xs font-medium text-destructive">Please select a location on the map.</p>
                   )}
-                />
+                </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 pt-4 border-t">
                   <FormLabel>Photo Evidence</FormLabel>
                   {!imagePreview ? (
                     <div className="flex items-center justify-center w-full">

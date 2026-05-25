@@ -26,7 +26,15 @@
         "description": { "type": "string" },
         "category": { "type": "string" },
         "imageUrl": { "type": "string" },
-        "location": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "address": { "type": "string" },
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" }
+          },
+          "required": ["address", "latitude", "longitude"]
+        },
         "priority": { "type": "string", "enum": ["Low", "Medium", "High"] },
         "status": { "type": "string", "enum": ["Pending", "In Review", "Assigned", "In Progress", "Resolved"] },
         "adminRemarks": { "type": "string" },

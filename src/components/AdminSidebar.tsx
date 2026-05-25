@@ -10,7 +10,8 @@ import {
   BarChart3, 
   Settings,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Map as MapIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/firebase';
@@ -20,6 +21,7 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { label: 'Complaints', href: '/admin/complaints', icon: FileText },
+  { label: 'Map View', href: '/admin/map', icon: MapIcon },
   { label: 'Citizens', href: '/admin/users', icon: Users },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];
@@ -33,7 +35,7 @@ export function AdminSidebar() {
   };
 
   return (
-    <aside className="w-64 h-screen bg-white border-r flex flex-col sticky top-0">
+    <aside className="w-64 h-screen bg-white border-r flex flex-col sticky top-0 shrink-0">
       <div className="p-6 border-b flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-2xl shadow-lg">
           C
