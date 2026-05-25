@@ -29,6 +29,10 @@
         "location": { "type": "string" },
         "priority": { "type": "string", "enum": ["Low", "Medium", "High"] },
         "status": { "type": "string", "enum": ["Pending", "In Review", "Assigned", "In Progress", "Resolved"] },
+        "adminRemarks": { "type": "string" },
+        "assignedTo": { "type": "string" },
+        "resolvedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },

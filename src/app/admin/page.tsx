@@ -1,208 +1,135 @@
+
 "use client"
 
-import { useEffect, useState } from 'react';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Button } from '@/components/ui/button';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { useMemo } from 'react';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
-  MoreHorizontal, 
-  Eye, 
-  Trash2, 
+  FileText, 
+  Users, 
   CheckCircle2, 
-  AlertCircle, 
-  Search as SearchIcon,
-  Download,
-  Filter
+  Clock, 
+  TrendingUp,
+  AlertCircle,
+  ArrowRight
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
 
-export default function AdminPage() {
-  const [complaints, setComplaints] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
+export default function AdminDashboardPage() {
+  const db = useFirestore();
 
-  useEffect(() => {
-    const q = query(collection(db, "complaints"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setComplaints(docs);
-      setLoading(false);
+  const complaintsQuery = useMemo(() => query(collection(db, "complaints"), orderBy("createdAt", "desc")), [db]);
+  const usersQuery = useMemo(() => query(collection(db, "users"), limit(100)), [db]);
+
+  const { data: complaints, loading: complaintsLoading } = useCollection(complaintsQuery);
+  const { data: users, loading: usersLoading } = useCollection(usersQuery);
+
+  const stats = useMemo(() => {
+    if (!complaints) return { total: 0, pending: 0, inProgress: 0, resolved: 0 };
+    return {
+      total: complaints.length,
+      pending: complaints.filter(c => c.status === "Pending").length,
+      inProgress: complaints.filter(c => c.status === "In Progress").length,
+      resolved: complaints.filter(c => c.status === "Resolved").length,
+    };
+  }, [complaints]);
+
+  const categoryData = useMemo(() => {
+    if (!complaints) return [];
+    const counts: Record<string, number> = {};
+    complaints.forEach(c => {
+      counts[c.category] = (counts[c.category] || 0) + 1;
     });
-    return () => unsub();
-  }, []);
+    return Object.entries(counts).map(([name, count]) => ({ name, count }));
+  }, [complaints]);
 
-  const handleStatusUpdate = async (id: string, newStatus: string) => {
-    try {
-      await updateDoc(doc(db, "complaints", id), {
-        status: newStatus,
-        updatedAt: new Date()
-      });
-      toast({
-        title: "Status Updated",
-        description: `The report is now marked as ${newStatus}.`
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update status.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this report? This action cannot be undone.")) return;
-    try {
-      await deleteDoc(doc(db, "complaints", id));
-      toast({
-        title: "Report Deleted",
-        description: "The report has been removed from the system."
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete report.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const filteredComplaints = complaints.filter(c => 
-    c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const stats = {
-    total: complaints.length,
-    pending: complaints.filter(c => c.status === "Pending").length,
-    resolved: complaints.filter(c => c.status === "Resolved").length,
-    active: complaints.filter(c => !["Pending", "Resolved"].includes(c.status)).length
-  };
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Sidebar would go here in a real app */}
-      <div className="p-8 space-y-8 container mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-headline font-bold text-slate-900">Admin Console</h1>
-            <p className="text-muted-foreground">Manage and resolve community civic issues.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Export Data</Button>
-            <Button><Filter className="mr-2 h-4 w-4" /> Filters</Button>
-          </div>
+    <div className="p-8 space-y-8 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-headline font-bold text-slate-900">System Overview</h1>
+          <p className="text-muted-foreground">Welcome to the CIVICcare management dashboard.</p>
         </div>
-
-        {/* Admin Stats */}
-        <div className="grid md:grid-cols-4 gap-6">
-          <AdminStatCard label="Total Reports" value={stats.total} />
-          <AdminStatCard label="Pending Review" value={stats.pending} color="text-orange-600" />
-          <AdminStatCard label="Active Maintenance" value={stats.active} color="text-blue-600" />
-          <AdminStatCard label="Resolved Issues" value={stats.resolved} color="text-green-600" />
+        <div className="flex items-center gap-3">
+          <Button asChild>
+            <Link href="/admin/complaints">Manage All Reports</Link>
+          </Button>
         </div>
+      </div>
 
-        <Card className="border-none shadow-lg">
-          <CardHeader className="bg-white border-b flex flex-row items-center justify-between gap-4">
-            <div className="space-y-1">
-              <CardTitle>All Complaints</CardTitle>
-              <CardDescription>View and manage all citizen reports submitted.</CardDescription>
-            </div>
-            <div className="relative w-full max-w-sm">
-              <SearchIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search by ID, title, or category..." 
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard label="Total Reports" value={stats.total} icon={<FileText className="text-blue-500" />} />
+        <StatCard label="Pending Review" value={stats.pending} icon={<Clock className="text-orange-500" />} color="text-orange-600" />
+        <StatCard label="In Maintenance" value={stats.inProgress} icon={<TrendingUp className="text-purple-500" />} color="text-purple-600" />
+        <StatCard label="Total Citizens" value={users?.length || 0} icon={<Users className="text-emerald-500" />} />
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-8">
+        <Card className="lg:col-span-2 border-none shadow-sm bg-white">
+          <CardHeader>
+            <CardTitle className="text-lg">Reports by Category</CardTitle>
+            <CardDescription>Volume of civic issues across different departments.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px] mt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={categoryData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip 
+                  cursor={{ fill: '#f8fafc' }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-white">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Recent Reports</CardTitle>
+              <Button variant="ghost" size="sm" asChild className="text-primary h-8 p-0 hover:bg-transparent">
+                <Link href="/admin/complaints">View All <ArrowRight size={14} className="ml-1" /></Link>
+              </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-0 bg-white">
-            <Table>
-              <TableHeader className="bg-slate-50">
-                <TableRow>
-                  <TableHead className="w-[100px]">ID</TableHead>
-                  <TableHead>Issue Title</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">Loading reports...</TableCell>
-                  </TableRow>
-                ) : filteredComplaints.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">No reports found.</TableCell>
-                  </TableRow>
-                ) : (
-                  filteredComplaints.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-mono text-xs">{c.id.substring(0, 8)}</TableCell>
-                      <TableCell className="font-medium">{c.title}</TableCell>
-                      <TableCell>{c.category}</TableCell>
-                      <TableCell>
-                        <Badge variant={c.priority === 'High' ? 'destructive' : c.priority === 'Medium' ? 'default' : 'secondary'}>
-                          {c.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={`${getStatusColor(c.status)}`}>{c.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => window.location.href=`/track/${c.id}`}>
-                              <Eye className="mr-2 h-4 w-4" /> View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel className="text-[10px] text-muted-foreground">Update Status</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleStatusUpdate(c.id, "In Review")}>Mark: In Review</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusUpdate(c.id, "Assigned")}>Mark: Assigned</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusUpdate(c.id, "In Progress")}>Mark: In Progress</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusUpdate(c.id, "Resolved")}>Mark: Resolved</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(c.id)}>
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete Report
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+          <CardContent className="space-y-4">
+            {complaints?.slice(0, 5).map((c: any) => (
+              <div key={c.id} className="flex items-center justify-between gap-4 p-3 rounded-lg border border-slate-50 hover:bg-slate-50 transition-colors group">
+                <div className="flex flex-col gap-1 overflow-hidden">
+                  <span className="text-sm font-bold text-slate-900 truncate">{c.title}</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{c.category}</span>
+                </div>
+                <Badge className={cn("text-[10px] px-2", getStatusColor(c.status))}>{c.status}</Badge>
+              </div>
+            ))}
+            {!complaintsLoading && complaints?.length === 0 && (
+              <div className="py-12 text-center">
+                <AlertCircle className="mx-auto h-8 w-8 text-slate-200" />
+                <p className="text-slate-400 text-sm mt-2">No reports to display</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -210,12 +137,15 @@ export default function AdminPage() {
   );
 }
 
-function AdminStatCard({ label, value, color = "text-slate-900" }: any) {
+function StatCard({ label, value, icon, color = "text-slate-900" }: any) {
   return (
-    <Card className="border-none shadow-sm">
+    <Card className="border-none shadow-sm bg-white">
       <CardContent className="pt-6">
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
-        <p className={`text-4xl font-headline font-bold mt-2 ${color}`}>{value}</p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+          <div className="p-2 bg-slate-50 rounded-lg">{icon}</div>
+        </div>
+        <p className={`text-3xl font-headline font-extrabold ${color}`}>{value}</p>
       </CardContent>
     </Card>
   );
@@ -223,11 +153,11 @@ function AdminStatCard({ label, value, color = "text-slate-900" }: any) {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case 'Pending': return 'bg-slate-100 text-slate-700';
-    case 'In Review': return 'bg-blue-100 text-blue-700';
-    case 'Assigned': return 'bg-purple-100 text-purple-700';
-    case 'In Progress': return 'bg-orange-100 text-orange-700';
-    case 'Resolved': return 'bg-green-100 text-green-700';
-    default: return 'bg-slate-100 text-slate-700';
+    case 'Pending': return 'bg-slate-100 text-slate-600';
+    case 'In Review': return 'bg-blue-100 text-blue-600';
+    case 'Assigned': return 'bg-purple-100 text-purple-600';
+    case 'In Progress': return 'bg-orange-100 text-orange-600';
+    case 'Resolved': return 'bg-green-100 text-green-600';
+    default: return 'bg-slate-100 text-slate-600';
   }
 }
