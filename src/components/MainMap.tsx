@@ -14,9 +14,10 @@ const mapContainerStyle = {
   height: 'calc(100vh - 120px)',
 };
 
+// Center of India
 const center = {
-  lat: 40.7128,
-  lng: -74.0060,
+  lat: 20.5937,
+  lng: 78.9629,
 };
 
 interface MainMapProps {
@@ -37,6 +38,7 @@ export function MainMap({ complaints, showHeatmap = false }: MainMapProps) {
 
   const mapOptions = {
     disableDefaultUI: false,
+    zoom: 5,
     styles: [
       {
         featureType: "poi",
@@ -50,7 +52,7 @@ export function MainMap({ complaints, showHeatmap = false }: MainMapProps) {
     <div className="relative w-full h-full rounded-xl overflow-hidden border bg-white shadow-sm">
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        zoom={12}
+        zoom={5}
         center={center}
         options={mapOptions}
       >
@@ -103,7 +105,6 @@ export function MainMap({ complaints, showHeatmap = false }: MainMapProps) {
 }
 
 function getMarkerIcon(category: string) {
-  // SVG Pin colors based on category
   const colors: Record<string, string> = {
     'Road Damage': '#ef4444',
     'Garbage': '#10b981',

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -24,7 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Camera, Loader2, MapPin, Sparkles, X, ShieldAlert, ArrowLeft } from 'lucide-react';
+import { Camera, Loader2, MapPin, Sparkles, X, ShieldAlert, ArrowLeft, Globe } from 'lucide-react';
 import { categorizeComplaint } from '@/ai/flows/ai-complaint-categorization';
 import { aiComplaintModeration } from '@/ai/flows/ai-complaint-moderation';
 import { toast } from '@/hooks/use-toast';
@@ -184,9 +185,12 @@ export default function ReportPage() {
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-headline font-bold text-slate-900">New Report</h1>
-            <p className="text-sm text-slate-500">Provide details about the civic issue in your area.</p>
+            <p className="text-sm text-slate-500">Exclusively for municipal issues across India.</p>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full text-blue-700 text-[10px] font-bold">
+            <Globe size={12} /> India Only
           </div>
         </div>
 
@@ -201,7 +205,7 @@ export default function ReportPage() {
           </div>
         )}
 
-        <Card className="border shadow-sm bg-white">
+        <Card className="border border-slate-200 shadow-sm bg-white">
           <CardContent className="p-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -211,7 +215,7 @@ export default function ReportPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Title</FormLabel>
-                      <FormControl><Input placeholder="E.g., Pothole on Maple Ave" {...field} /></FormControl>
+                      <FormControl><Input placeholder="E.g., Pothole on MG Road, Bangalore" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -262,33 +266,33 @@ export default function ReportPage() {
                     <FormItem>
                       <div className="flex items-center justify-between">
                         <FormLabel>Description</FormLabel>
-                        <Button type="button" variant="ghost" size="sm" className="text-primary h-auto p-0 font-bold text-xs" onClick={handleAiCategorize} disabled={isAnalyzing}>
-                          {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />} AI Suggest
+                        <Button type="button" variant="ghost" size="sm" className="text-blue-600 h-auto p-0 font-bold text-xs" onClick={handleAiCategorize} disabled={isAnalyzing}>
+                          {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />} AI Assist
                         </Button>
                       </div>
-                      <FormControl><Textarea placeholder="Provide details about the issue..." className="min-h-[120px]" {...field} /></FormControl>
+                      <FormControl><Textarea placeholder="Provide details including landmarks and district..." className="min-h-[120px]" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
                 <div className="space-y-4">
-                  <FormLabel className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Location</FormLabel>
+                  <FormLabel className="flex items-center gap-2 font-bold text-slate-700"><MapPin className="h-4 w-4" /> Location (India)</FormLabel>
                   <MapProvider>
                     <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
                   </MapProvider>
                 </div>
 
                 <div className="space-y-4">
-                  <FormLabel className="flex items-center gap-2"><Camera className="h-4 w-4" /> Photo Evidence</FormLabel>
+                  <FormLabel className="flex items-center gap-2 font-bold text-slate-700"><Camera className="h-4 w-4" /> Photo Evidence</FormLabel>
                   {!imagePreview ? (
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors border-slate-200">
                       <Camera className="w-8 h-8 text-slate-300" />
-                      <span className="text-xs text-slate-500 mt-2 font-medium">Click to upload photo</span>
+                      <span className="text-xs text-slate-500 mt-2 font-medium">Click to upload photo of issue</span>
                       <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
                     </label>
                   ) : (
-                    <div className="relative h-48 rounded-lg overflow-hidden border">
+                    <div className="relative h-48 rounded-lg overflow-hidden border border-slate-200">
                       <img src={imagePreview} className="w-full h-full object-cover" />
                       <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7 rounded-full" onClick={() => setImagePreview(null)}>
                         <X size={14} />
@@ -297,7 +301,7 @@ export default function ReportPage() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full h-11 text-sm font-bold" disabled={isSubmitting}>
+                <Button type="submit" className="w-full h-11 text-sm font-bold bg-blue-600 hover:bg-blue-700 shadow-md" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Submit Report"}
                 </Button>
               </form>
