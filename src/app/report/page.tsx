@@ -205,7 +205,7 @@ export default function ReportPage() {
         )}
 
         <Card className="border-none shadow-xl bg-white p-8">
-          <CardContent className="p-0 pt-0">
+          <CardContent className="p-0">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField

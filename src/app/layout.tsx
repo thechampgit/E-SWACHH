@@ -1,3 +1,4 @@
+
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
@@ -5,6 +6,7 @@ import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 import { AiChatbot } from '@/components/AiChatbot';
 import { Metadata, Viewport } from 'next';
 import React from 'react';
+import { ClientOnly } from '@/components/ClientOnly';
 
 export const metadata: Metadata = {
   title: 'CivicPulse | Smart City Governance',
@@ -28,14 +30,6 @@ export const viewport: Viewport = {
   themeColor: '#2563eb',
 };
 
-/**
- * A simple hydration guard to prevent Next.js 15 hydration mismatches
- * for client-side heavy providers.
- */
-function ClientOnly({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -51,9 +45,11 @@ export default function RootLayout({
       <body className="font-body antialiased bg-background">
         <GlobalErrorBoundary>
           <FirebaseClientProvider>
-            {children}
-            <AiChatbot />
-            <Toaster />
+            <ClientOnly>
+              {children}
+              <AiChatbot />
+              <Toaster />
+            </ClientOnly>
           </FirebaseClientProvider>
         </GlobalErrorBoundary>
       </body>
