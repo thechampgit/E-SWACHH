@@ -1,5 +1,4 @@
-
-"use client"
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -25,7 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Camera, Loader2, MapPin, Sparkles, X, ShieldAlert } from 'lucide-react';
+import { Camera, Loader2, MapPin, Sparkles, X, ShieldAlert, ArrowLeft } from 'lucide-react';
 import { categorizeComplaint } from '@/ai/flows/ai-complaint-categorization';
 import { aiComplaintModeration } from '@/ai/flows/ai-complaint-moderation';
 import { toast } from '@/hooks/use-toast';
@@ -95,7 +94,7 @@ export default function ReportPage() {
       if (result) {
         form.setValue('category', result.category);
         form.setValue('priority', result.priority as any);
-        toast({ title: "AI Insights Applied", description: `Detected: ${result.category}` });
+        toast({ title: "AI Categorization complete" });
       }
     } catch (error) {
       console.error(error);
@@ -129,8 +128,7 @@ export default function ReportPage() {
         imageUrl = await getDownloadURL(storageRef);
       }
 
-      // Calculate SLA Deadline
-      let slaDeadline = addDays(new Date(), 7); // Default Low
+      let slaDeadline = addDays(new Date(), 7);
       if (values.priority === 'Critical') slaDeadline = addHours(new Date(), 24);
       if (values.priority === 'High') slaDeadline = addDays(new Date(), 2);
       if (values.priority === 'Medium') slaDeadline = addDays(new Date(), 4);
@@ -156,25 +154,24 @@ export default function ReportPage() {
 
       const docRef = await addDoc(collection(db, "complaints"), complaintData);
 
-      // Update User Contribution
       await updateDoc(doc(db, 'users', user.uid), {
         contributionLevel: increment(10)
       });
 
       await addDoc(collection(db, "notifications"), {
         userId: user.uid,
-        title: "SLA Tracker Active",
-        message: `Your report has been logged. Based on priority, our resolution target is ${slaDeadline.toLocaleDateString()}.`,
+        title: "Report Submitted",
+        message: `Your report has been logged. Priority: ${values.priority}. Target resolution: ${slaDeadline.toLocaleDateString()}.`,
         type: "info",
         complaintId: docRef.id,
         read: false,
         createdAt: serverTimestamp()
       });
 
-      toast({ title: "Report Submitted", description: "Tracking is now active." });
+      toast({ title: "Report Submitted Successfully" });
       router.push(`/track/${docRef.id}`);
     } catch (error) {
-      toast({ title: "Error", variant: "destructive" });
+      toast({ title: "Submission error", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -182,39 +179,39 @@ export default function ReportPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-headline font-bold text-slate-900">Governance Submittal</h1>
-            <p className="text-muted-foreground">High-accountability civic issue reporting.</p>
+      <div className="container mx-auto px-4 max-w-2xl">
+        <div className="mb-8 flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-headline font-bold text-slate-900">New Report</h1>
+            <p className="text-sm text-slate-500">Provide details about the civic issue in your area.</p>
           </div>
-          <Button variant="ghost" onClick={() => router.back()}>Cancel</Button>
         </div>
 
         {aiWarning && (
-          <Card className="mb-6 border-orange-200 bg-orange-50/50">
-            <CardContent className="p-4 flex gap-3">
-              <ShieldAlert className="text-orange-500 shrink-0" />
-              <div>
-                <p className="text-sm font-bold text-orange-900">AI Validation Check</p>
-                <p className="text-xs text-orange-700 mt-1">{aiWarning.reason}</p>
-                <Button variant="outline" size="sm" className="mt-3 text-[10px] h-7" onClick={() => setAiWarning(null)}>Override & Fix</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200 flex gap-3">
+            <ShieldAlert className="text-amber-600 shrink-0 h-5 w-5" />
+            <div className="space-y-2">
+              <p className="text-sm font-bold text-amber-900">Review Required</p>
+              <p className="text-xs text-amber-700">{aiWarning.reason}</p>
+              <Button variant="outline" size="sm" onClick={() => setAiWarning(null)}>Continue Anyway</Button>
+            </div>
+          </div>
         )}
 
-        <Card className="border-none shadow-xl bg-white p-8">
-          <CardContent className="p-0">
+        <Card className="border shadow-sm bg-white">
+          <CardContent className="p-8">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Brief Title</FormLabel>
-                      <FormControl><Input placeholder="Clear and concise..." {...field} /></FormControl>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl><Input placeholder="E.g., Pothole on Maple Ave" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -244,7 +241,7 @@ export default function ReportPage() {
                     name="priority"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Impact Level</FormLabel>
+                        <FormLabel>Priority</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent>
@@ -264,44 +261,44 @@ export default function ReportPage() {
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel>Detailed Narrative</FormLabel>
-                        <Button type="button" variant="ghost" size="sm" className="text-primary gap-1 font-bold text-xs" onClick={handleAiCategorize} disabled={isAnalyzing}>
-                          {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} Smart Fill
+                        <FormLabel>Description</FormLabel>
+                        <Button type="button" variant="ghost" size="sm" className="text-primary h-auto p-0 font-bold text-xs" onClick={handleAiCategorize} disabled={isAnalyzing}>
+                          {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />} AI Suggest
                         </Button>
                       </div>
-                      <FormControl><Textarea placeholder="Describe the severity and impact..." className="min-h-[120px]" {...field} /></FormControl>
+                      <FormControl><Textarea placeholder="Provide details about the issue..." className="min-h-[120px]" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="pt-4 border-t">
-                  <FormLabel className="mb-4 block"><MapPin className="inline mr-2 h-4 w-4" /> Pinpoint Location</FormLabel>
+                <div className="space-y-4">
+                  <FormLabel className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Location</FormLabel>
                   <MapProvider>
                     <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
                   </MapProvider>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <FormLabel className="mb-4 block"><Camera className="inline mr-2 h-4 w-4" /> Photographic Proof</FormLabel>
+                <div className="space-y-4">
+                  <FormLabel className="flex items-center gap-2"><Camera className="h-4 w-4" /> Photo Evidence</FormLabel>
                   {!imagePreview ? (
-                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
                       <Camera className="w-8 h-8 text-slate-300" />
-                      <span className="text-xs text-slate-500 mt-2">Upload Visual Evidence</span>
+                      <span className="text-xs text-slate-500 mt-2 font-medium">Click to upload photo</span>
                       <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
                     </label>
                   ) : (
-                    <div className="relative h-60 rounded-xl overflow-hidden shadow-sm">
+                    <div className="relative h-48 rounded-lg overflow-hidden border">
                       <img src={imagePreview} className="w-full h-full object-cover" />
-                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8" onClick={() => setImagePreview(null)}>
+                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7 rounded-full" onClick={() => setImagePreview(null)}>
                         <X size={14} />
                       </Button>
                     </div>
                   )}
                 </div>
 
-                <Button type="submit" className="w-full h-12 text-md font-bold rounded-full shadow-lg" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : "Initiate Governance Track"}
+                <Button type="submit" className="w-full h-11 text-sm font-bold" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Submit Report"}
                 </Button>
               </form>
             </Form>

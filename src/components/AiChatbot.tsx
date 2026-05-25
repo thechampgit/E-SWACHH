@@ -1,8 +1,7 @@
-
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot, Loader2, Map as MapIcon, PlusCircle, Search, Zap } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, PlusCircle, Map as MapIcon, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export function AiChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model', content: string }[]>([
-    { role: 'model', content: "Protocol initialized. I am your CivicPulse AI. How shall we optimize the city today?" }
+    { role: 'model', content: "Hello! I'm your CivicPulse Assistant. How can I help you improve the city today?" }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -46,93 +45,92 @@ export function AiChatbot() {
 
       setMessages(prev => [...prev, { role: 'model', content: result.reply }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', content: "Neural link interrupted. Please restablish connection." }]);
+      setMessages(prev => [...prev, { role: 'model', content: "I'm having trouble connecting to the civic servers. Please try again in a moment." }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-[200]">
+    <div className="fixed bottom-6 right-6 z-[200]">
       <AnimatePresence>
         {!isOpen ? (
           <motion.div
-            initial={{ scale: 0, rotate: -45 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: 45 }}
-            whileHover={{ scale: 1.1 }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
           >
             <Button 
               size="icon" 
-              className="h-16 w-16 rounded-[2rem] shadow-[0_20px_40px_rgba(6,182,212,0.4)] bg-gradient-to-tr from-primary to-cyan-400 text-primary-foreground border-none" 
+              className="h-14 w-14 rounded-full shadow-lg bg-primary text-primary-foreground border-none" 
               onClick={() => setIsOpen(true)}
             >
-              <Zap className="h-8 w-8 fill-primary-foreground" />
+              <MessageSquare className="h-6 w-6" />
             </Button>
           </motion.div>
         ) : (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: 50, scale: 0.9, filter: 'blur(10px)' }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
           >
-            <Card className="w-[420px] h-[600px] shadow-[0_50px_100px_rgba(0,0,0,0.8)] border border-white/10 bg-black/40 backdrop-blur-3xl flex flex-col rounded-[3rem] overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-primary/80 to-cyan-600/80 backdrop-blur-xl p-6 flex flex-row items-center justify-between shrink-0 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-xl"><Zap className="h-6 w-6 text-white" /></div>
-                  <CardTitle className="text-xl font-black text-white tracking-tight">Civic AI</CardTitle>
+            <Card className="w-[380px] h-[520px] shadow-2xl border flex flex-col rounded-xl overflow-hidden bg-white">
+              <CardHeader className="bg-white p-4 flex flex-row items-center justify-between border-b">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs">AI</div>
+                  <CardTitle className="text-sm font-bold text-slate-900">Civic Assistant</CardTitle>
                 </div>
-                <Button variant="ghost" size="icon" className="h-10 w-10 text-white hover:bg-white/10 rounded-2xl" onClick={() => setIsOpen(false)}>
-                  <X className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900" onClick={() => setIsOpen(false)}>
+                  <X className="h-4 w-4" />
                 </Button>
               </CardHeader>
-              <CardContent className="flex-1 p-0 overflow-hidden bg-transparent">
-                <ScrollArea className="h-full p-6" ref={scrollRef}>
-                  <div className="space-y-6">
+              <CardContent className="flex-1 p-0 overflow-hidden bg-slate-50/50">
+                <ScrollArea className="h-full p-4" ref={scrollRef}>
+                  <div className="space-y-4">
                     {messages.map((m, i) => (
-                      <motion.div 
-                        initial={{ opacity: 0, x: m.role === 'user' ? 20 : -20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                      <div 
                         key={i} 
                         className={cn("flex flex-col", m.role === 'user' ? "items-end" : "items-start")}
                       >
                         <div className={cn(
-                          "max-w-[90%] p-5 rounded-[2rem] text-sm leading-relaxed font-medium shadow-2xl",
+                          "max-w-[85%] p-3 rounded-xl text-sm leading-relaxed",
                           m.role === 'user' 
-                            ? "bg-primary text-white rounded-br-none" 
-                            : "bg-white/10 text-white/90 backdrop-blur-md border border-white/5 rounded-bl-none"
+                            ? "bg-primary text-white" 
+                            : "bg-white text-slate-800 border shadow-sm"
                         )}>
                           {m.content}
                         </div>
-                      </motion.div>
+                      </div>
                     ))}
                     {isLoading && (
-                      <div className="flex items-start gap-2">
-                        <div className="bg-white/5 backdrop-blur-md text-primary p-4 rounded-3xl rounded-bl-none border border-white/5">
-                          <Loader2 className="h-5 w-5 animate-spin" />
+                      <div className="flex items-start">
+                        <div className="bg-white border text-slate-400 p-2 rounded-xl shadow-sm">
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         </div>
                       </div>
                     )}
                   </div>
                 </ScrollArea>
               </CardContent>
-              <CardFooter className="p-6 border-t border-white/10 bg-black/20 gap-3 shrink-0">
-                <Input 
-                  placeholder="Ask the pulse..." 
-                  value={input} 
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  className="text-sm h-14 border-white/10 bg-white/5 rounded-2xl focus:ring-primary/20 placeholder:text-white/20"
-                />
-                <Button size="icon" className="h-14 w-14 shrink-0 rounded-2xl bg-primary hover:bg-primary/90" onClick={handleSend} disabled={isLoading}>
-                  <Send className="h-6 w-6" />
-                </Button>
+              <CardFooter className="p-3 border-t bg-white gap-2 flex-col">
+                <div className="flex gap-2 w-full">
+                  <Input 
+                    placeholder="Ask a question..." 
+                    value={input} 
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                    className="text-xs h-9 bg-slate-50 border-none"
+                  />
+                  <Button size="icon" className="h-9 w-9 shrink-0 rounded-md" onClick={handleSend} disabled={isLoading}>
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex justify-around gap-2 w-full pt-2 border-t mt-2">
+                  <QuickButton icon={<PlusCircle size={12} />} label="Report" href="/report" />
+                  <QuickButton icon={<MapIcon size={12} />} label="Map" href="/map" />
+                  <QuickButton icon={<Search size={12} />} label="Track" href="/my-reports" />
+                </div>
               </CardFooter>
-              <div className="px-6 pb-6 bg-transparent flex justify-around gap-4">
-                <QuickAction icon={<PlusCircle size={16} />} label="Report" href="/report" />
-                <QuickAction icon={<MapIcon size={16} />} label="Grid" href="/map" />
-                <QuickAction icon={<Search size={16} />} label="Sync" href="/track" />
-              </div>
             </Card>
           </motion.div>
         )}
@@ -141,13 +139,13 @@ export function AiChatbot() {
   );
 }
 
-function QuickAction({ icon, label, href }: { icon: any, label: string, href: string }) {
+function QuickButton({ icon, label, href }: { icon: any, label: string, href: string }) {
   return (
-    <Link href={href} className="flex-1 flex flex-col items-center gap-2 group">
-      <div className="w-full py-3 bg-white/5 rounded-2xl border border-white/5 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all flex items-center justify-center">
-        <div className="text-white/40 group-hover:text-primary transition-colors">{icon}</div>
+    <Link href={href} className="flex flex-col items-center gap-1 group text-[10px] text-slate-500 hover:text-primary transition-colors">
+      <div className="w-8 h-8 bg-slate-50 rounded flex items-center justify-center border group-hover:bg-primary/10 group-hover:border-primary/20 transition-all">
+        {icon}
       </div>
-      <span className="text-[10px] font-black text-white/20 group-hover:text-primary uppercase tracking-widest">{label}</span>
+      <span className="font-medium">{label}</span>
     </Link>
   );
 }
