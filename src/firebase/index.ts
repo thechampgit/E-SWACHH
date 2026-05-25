@@ -9,8 +9,7 @@ import { firebaseConfig } from './config';
 import { useMemo, useRef } from 'react';
 
 /**
- * Initializes Firebase services safely.
- * returns nulls if configuration is missing to prevent fatal SDK crashes.
+ * Initializes Firebase services safely using a singleton pattern.
  */
 export function initializeFirebase(): { 
   app: FirebaseApp | null; 
@@ -19,39 +18,31 @@ export function initializeFirebase(): {
   storage: FirebaseStorage | null;
   messaging: Messaging | null;
 } {
-  // Protective check: Ensure we have at least a Project ID and API Key
-  const isConfigIncomplete = !firebaseConfig.apiKey || 
-                             firebaseConfig.apiKey === "" || 
-                             !firebaseConfig.projectId ||
-                             firebaseConfig.apiKey.includes("your-api-key");
-
-  if (isConfigIncomplete) {
+  // Protective check: Ensure we have a valid API Key
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("your-api-key")) {
+    console.warn("Firebase API Key is missing. Delaying initialization.");
     return { app: null, db: null, auth: null, storage: null, messaging: null };
   }
 
   try {
-    // Singleton pattern for Firebase App initialization
     const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     
-    // Initialize services
+    // Initialize production services
     const db = getFirestore(app);
     const auth = getAuth(app);
     const storage = getStorage(app);
     
     let messaging: Messaging | null = null;
     
-    // Messaging is only supported in browser environments
     if (typeof window !== 'undefined') {
       isSupported().then(supported => {
         if (supported && !messaging) {
           try {
             messaging = getMessaging(app);
           } catch (e) {
-            console.warn('FCM Initialization failed:', e);
+            console.warn('FCM not initialized:', e);
           }
         }
-      }).catch(err => {
-        console.warn('Messaging support check failed:', err);
       });
     }
 
@@ -68,17 +59,14 @@ export async function requestNotificationPermission(messaging: Messaging | null)
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
-      if (!firebaseConfig.vapidKey) {
-        console.warn("FCM: Missing VAPID key in configuration.");
-        return null;
-      }
+      if (!firebaseConfig.vapidKey) return null;
       const token = await getToken(messaging, {
         vapidKey: firebaseConfig.vapidKey
       });
       return token;
     }
   } catch (error) {
-    console.warn('Error requesting notification permission:', error);
+    console.warn('Notification permission error:', error);
   }
   return null;
 }
