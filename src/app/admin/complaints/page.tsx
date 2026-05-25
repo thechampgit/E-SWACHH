@@ -2,8 +2,8 @@
 "use client"
 
 import { useMemo, useState } from 'react';
-import { collection, query, orderBy, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
+import { collection, query, orderBy, doc, updateDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { useFirestore, useCollection, useUser } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -36,9 +36,11 @@ import {
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { NotificationCenter } from '@/components/NotificationCenter';
 
 export default function AdminComplaintsPage() {
   const db = useFirestore();
+  const { user: adminUser } = useUser();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
@@ -55,16 +57,29 @@ export default function AdminComplaintsPage() {
     });
   }, [complaints, searchTerm, statusFilter]);
 
-  const handleUpdateStatus = async (id: string, status: string) => {
+  const handleUpdateStatus = async (complaint: any, newStatus: string) => {
     try {
-      await updateDoc(doc(db, "complaints", id), {
-        status,
+      await updateDoc(doc(db, "complaints", complaint.id), {
+        status: newStatus,
         updatedAt: serverTimestamp(),
-        resolvedAt: status === "Resolved" ? serverTimestamp() : null
+        resolvedAt: newStatus === "Resolved" ? serverTimestamp() : null,
+        updatedBy: adminUser?.uid
       });
+
+      // Create Notification for the Citizen
+      await addDoc(collection(db, "notifications"), {
+        userId: complaint.userId,
+        title: `Update: ${complaint.title}`,
+        message: `Your report has been updated to "${newStatus}". Our maintenance team is actively working on it.`,
+        type: newStatus === "Resolved" ? "resolved" : "info",
+        complaintId: complaint.id,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+
       toast({
         title: "Status Updated",
-        description: `Complaint #${id.substring(0, 8)} is now marked as ${status}.`
+        description: `Complaint status changed to ${newStatus}. Citizen has been notified.`
       });
     } catch (error) {
       toast({
@@ -81,6 +96,9 @@ export default function AdminComplaintsPage() {
         <div className="space-y-1">
           <h1 className="text-3xl font-headline font-bold text-slate-900">Manage Reports</h1>
           <p className="text-muted-foreground">Monitor and update the status of community issues.</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <NotificationCenter />
         </div>
       </div>
 
@@ -176,13 +194,13 @@ export default function AdminComplaintsPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel className="text-xs uppercase font-bold text-slate-400">Update Status</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "In Review")}>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(c, "In Review")}>
                             <Clock size={14} className="mr-2" /> Mark In Review
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "In Progress")}>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(c, "In Progress")}>
                             <AlertTriangle size={14} className="mr-2" /> Mark In Progress
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleUpdateStatus(c.id, "Resolved")}>
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(c, "Resolved")}>
                             <CheckCircle size={14} className="mr-2 text-emerald-500" /> Mark Resolved
                           </DropdownMenuItem>
                         </DropdownMenuContent>

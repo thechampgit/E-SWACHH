@@ -150,20 +150,22 @@ export default function ReportPage() {
         updatedAt: serverTimestamp(),
       };
 
-      const docRef = await addDoc(collection(db, "complaints"), complaintData)
-        .catch(async (err) => {
-          const permissionError = new FirestorePermissionError({
-            path: '/complaints',
-            operation: 'create',
-            requestResourceData: complaintData,
-          });
-          errorEmitter.emit('permission-error', permissionError);
-          throw err;
-        });
+      const docRef = await addDoc(collection(db, "complaints"), complaintData);
+
+      // Create initial notification for the user
+      await addDoc(collection(db, "notifications"), {
+        userId: user.uid,
+        title: "Report Submitted",
+        message: `Your report "${values.title}" has been successfully logged. ID: ${docRef.id.substring(0, 8)}`,
+        type: "success",
+        complaintId: docRef.id,
+        read: false,
+        createdAt: serverTimestamp()
+      });
 
       toast({
         title: "Report Submitted",
-        description: `Thank you for your contribution. Your report ID is ${docRef.id}`,
+        description: `Thank you for your contribution. Your report ID is ${docRef.id.substring(0, 8)}`,
       });
 
       router.push(`/track/${docRef.id}`);

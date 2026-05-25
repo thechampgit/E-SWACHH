@@ -45,6 +45,21 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "category", "description", "location", "status", "userId"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System alerts and updates for users.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["success", "warning", "info", "resolved", "alert"] },
+        "complaintId": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "read"]
     }
   },
   "auth": {
@@ -58,6 +73,10 @@
     "/complaints/{complaintId}": {
       "schema": "Complaint",
       "description": "Collection of civic complaints."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Collection of user-specific notifications."
     }
   }
 }
