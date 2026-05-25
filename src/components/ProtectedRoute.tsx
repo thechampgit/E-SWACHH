@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useDoc, useFirestore } from '@/firebase';
+import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
@@ -16,8 +16,11 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const db = useFirestore();
   const router = useRouter();
 
-  // Use a stable doc ref for fetching user data to avoid infinite loops
-  const userDocRef = user ? doc(db, 'users', user.uid) : null;
+  const userDocRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, 'users', user.uid);
+  }, [db, user?.uid]);
+
   const { data: userData, loading: docLoading } = useDoc<any>(userDocRef);
 
   const loading = authLoading || (user && docLoading);
@@ -27,7 +30,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
       if (!user) {
         router.push('/login');
       } else if (requiredRole && userData && userData.role !== requiredRole) {
-        // Redirect to their appropriate dashboard if they have the wrong role
         if (userData.role === 'admin') {
           router.push('/admin');
         } else {
@@ -35,7 +37,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
         }
       }
     }
-  }, [user, loading, requiredRole, userData, router]);
+  }, [user, loading, requiredRole, userData?.role, router]);
 
   if (loading) {
     return (

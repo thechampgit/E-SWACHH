@@ -1,10 +1,9 @@
-
 "use client"
 
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
-import { useFirestore, useCollection, useUser, useAuth } from '@/firebase';
+import { useFirestore, useCollection, useUser, useAuth, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +17,6 @@ import {
   LayoutGrid,
   MapPin,
   LogOut,
-  List,
   Award,
   ShieldCheck
 } from 'lucide-react';
@@ -32,7 +30,7 @@ export default function DashboardPage() {
   const { user } = useUser();
   const router = useRouter();
 
-  const complaintsQuery = useMemo(() => {
+  const complaintsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
       collection(db, "complaints"), 
@@ -40,7 +38,7 @@ export default function DashboardPage() {
       orderBy("createdAt", "desc"), 
       limit(20)
     );
-  }, [db, user]);
+  }, [db, user?.uid]);
 
   const { data: complaints, loading } = useCollection(complaintsQuery);
 

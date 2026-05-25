@@ -6,6 +6,7 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getMessaging, Messaging, isSupported, getToken } from 'firebase/messaging';
 import { firebaseConfig } from './config';
+import { useMemo, useRef } from 'react';
 
 export function initializeFirebase(): { 
   app: FirebaseApp; 
@@ -21,7 +22,6 @@ export function initializeFirebase(): {
   
   let messaging: Messaging | null = null;
   
-  // Messaging only works in the browser
   if (typeof window !== 'undefined') {
     isSupported().then(supported => {
       if (supported && !messaging) {
@@ -50,6 +50,21 @@ export async function requestNotificationPermission(messaging: Messaging | null)
     console.warn('Error requesting notification permission:', error);
   }
   return null;
+}
+
+/**
+ * A hook to memoize Firebase references and queries.
+ * This is crucial to prevent infinite re-render loops when passing refs to useDoc or useCollection.
+ */
+export function useMemoFirebase<T>(factory: () => T, deps: any[]): T {
+  const ref = useRef<{ deps: any[]; value: T } | null>(null);
+  const hasChanged = !ref.current || !deps.every((dep, i) => dep === ref.current?.deps[i]);
+  
+  if (hasChanged) {
+    ref.current = { deps, value: factory() };
+  }
+  
+  return ref.current!.value;
 }
 
 export * from './provider';
