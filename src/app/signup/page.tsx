@@ -93,6 +93,12 @@ export default function SignupPage() {
           title: "Setup Required",
           description: "Email/Password sign-up is not enabled in the Firebase Console.",
         });
+      } else if (error.code === 'auth/email-already-in-use') {
+        toast({
+          variant: "destructive",
+          title: "Account exists",
+          description: "This email is already registered. Please log in instead.",
+        });
       } else {
         toast({
           variant: "destructive",
