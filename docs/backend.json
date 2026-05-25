@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -10,6 +11,7 @@
         "email": { "type": "string", "format": "email" },
         "phone": { "type": "string" },
         "role": { "type": "string", "enum": ["citizen", "admin"] },
+        "contributionLevel": { "type": "number", "description": "Engagement score based on reports filed." },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role"]
@@ -24,6 +26,7 @@
         "title": { "type": "string" },
         "description": { "type": "string" },
         "category": { "type": "string" },
+        "department": { "type": "string", "enum": ["Roads", "Electricity", "Sanitation", "Water", "Emergency", "Other"] },
         "imageUrl": { "type": "string" },
         "location": {
           "type": "object",
@@ -36,6 +39,9 @@
         },
         "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"] },
         "status": { "type": "string", "enum": ["Pending", "In Review", "Assigned", "In Progress", "Resolved"] },
+        "slaDeadline": { "type": "string", "format": "date-time", "description": "Calculated deadline based on priority." },
+        "isEscalated": { "type": "boolean" },
+        "resolutionTimeHours": { "type": "number" },
         "aiAnalysis": {
           "type": "object",
           "properties": {
