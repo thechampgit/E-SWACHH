@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -19,12 +18,14 @@ export const firebaseConfig = {
 // Diagnostic check to help the user identify missing configuration
 if (typeof window !== 'undefined') {
   const missing = [];
-  if (!firebaseConfig.apiKey) missing.push("API Key");
-  if (!firebaseConfig.projectId) missing.push("Project ID");
+  if (!firebaseConfig.apiKey) missing.push("API Key (apiKey)");
+  if (!firebaseConfig.projectId) missing.push("Project ID (projectId)");
+  if (!firebaseConfig.authDomain) missing.push("Auth Domain (authDomain)");
   
   if (missing.length > 0) {
     console.warn(
-      `CivicPulse: Firebase config missing [${missing.join(", ")}]. Please set your NEXT_PUBLIC_FIREBASE_* variables.`
+      `CivicPulse Diagnostic: Missing configuration for [${missing.join(", ")}]. 
+      Please check your .env file or Firebase Project settings.`
     );
   }
 }

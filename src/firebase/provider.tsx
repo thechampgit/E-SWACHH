@@ -7,7 +7,7 @@ import { Auth } from 'firebase/auth';
 import { FirebaseStorage } from 'firebase/storage';
 import { Messaging } from 'firebase/messaging';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { ShieldAlert, RefreshCcw, KeyRound, Globe } from 'lucide-react';
+import { ShieldAlert, RefreshCcw, KeyRound, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { firebaseConfig } from './config';
 
@@ -40,15 +40,15 @@ export function FirebaseProvider({
   if (!app || !db || !auth || !storage) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F1F7F5] p-6 font-body">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 border border-[#160 15% 88%] text-center space-y-8 animate-in fade-in zoom-in duration-500">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 border border-[#e2e8f0] text-center space-y-8 animate-in fade-in zoom-in duration-500">
           <div className="w-24 h-24 bg-[#E8F3EF] rounded-full flex items-center justify-center mx-auto ring-8 ring-[#F1F7F5]">
             <KeyRound className="text-[#047857] h-10 w-10" />
           </div>
           
           <div className="space-y-3">
             <h1 className="text-3xl font-headline font-extrabold text-[#1A2E28]">Secure Connect</h1>
-            <p className="text-[#160 15% 45%] text-sm leading-relaxed">
-              CivicPulse requires an active connection to the municipal governance cloud. Please configure your project credentials.
+            <p className="text-[#64748b] text-sm leading-relaxed">
+              CivicPulse requires an active connection to the municipal governance cloud. Please configure your project credentials to begin.
             </p>
           </div>
           
@@ -64,13 +64,14 @@ export function FirebaseProvider({
           <div className="pt-4 space-y-4">
             <Button 
               onClick={() => window.location.reload()} 
-              className="w-full flex items-center justify-center gap-2 h-14 font-bold rounded-xl shadow-xl shadow-emerald-900/10 bg-[#047857] hover:bg-[#065F46] transition-all"
+              className="w-full flex items-center justify-center gap-2 h-14 font-bold rounded-xl shadow-xl shadow-emerald-900/10 bg-[#047857] hover:bg-[#065F46] text-white transition-all"
             >
               <RefreshCcw size={18} /> Re-verify Credentials
             </Button>
-            <p className="text-[10px] text-slate-400 italic">
-              Credential changes usually require a browser refresh.
-            </p>
+            <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400">
+              <AlertCircle size={12} />
+              <span>Credential changes require a browser refresh.</span>
+            </div>
           </div>
         </div>
       </div>
@@ -87,9 +88,10 @@ export function FirebaseProvider({
 
 function DiagnosticItem({ label, status }: { label: string; status: boolean }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between group">
       <span className="text-xs font-semibold text-slate-600">{label}</span>
-      <div className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${status ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+      <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase transition-colors ${status ? 'bg-emerald-100 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+        {status ? <CheckCircle2 size={10} /> : <AlertCircle size={10} />}
         {status ? 'Ready' : 'Pending'}
       </div>
     </div>

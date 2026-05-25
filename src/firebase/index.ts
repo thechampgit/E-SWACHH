@@ -8,6 +8,10 @@ import { getMessaging, Messaging, isSupported, getToken } from 'firebase/messagi
 import { firebaseConfig } from './config';
 import { useMemo, useRef } from 'react';
 
+/**
+ * Initializes Firebase services safely.
+ * returns nulls if configuration is missing to prevent fatal SDK crashes.
+ */
 export function initializeFirebase(): { 
   app: FirebaseApp | null; 
   db: Firestore | null; 
@@ -15,40 +19,45 @@ export function initializeFirebase(): {
   storage: FirebaseStorage | null;
   messaging: Messaging | null;
 } {
-  // Protective check: If API key is missing or is a placeholder, return nulls
-  // This prevents the SDK from throwing a fatal 'invalid-api-key' error during render
-  const isConfigMissing = !firebaseConfig.apiKey || 
-                          firebaseConfig.apiKey === "" || 
-                          firebaseConfig.apiKey.includes("your-api-key");
+  // Protective check: Ensure we have at least a Project ID and API Key
+  const isConfigIncomplete = !firebaseConfig.apiKey || 
+                             firebaseConfig.apiKey === "" || 
+                             !firebaseConfig.projectId ||
+                             firebaseConfig.apiKey.includes("your-api-key");
 
-  if (isConfigMissing) {
-    if (typeof window !== 'undefined') {
-      console.warn("CivicPulse: Firebase API Key is missing. Using diagnostic mode.");
-    }
+  if (isConfigIncomplete) {
     return { app: null, db: null, auth: null, storage: null, messaging: null };
   }
 
   try {
+    // Singleton pattern for Firebase App initialization
     const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    
+    // Initialize services
     const db = getFirestore(app);
     const auth = getAuth(app);
     const storage = getStorage(app);
     
     let messaging: Messaging | null = null;
     
+    // Messaging is only supported in browser environments
     if (typeof window !== 'undefined') {
       isSupported().then(supported => {
         if (supported && !messaging) {
-          messaging = getMessaging(app);
+          try {
+            messaging = getMessaging(app);
+          } catch (e) {
+            console.warn('FCM Initialization failed:', e);
+          }
         }
       }).catch(err => {
-        console.warn('Messaging not supported or blocked:', err);
+        console.warn('Messaging support check failed:', err);
       });
     }
 
     return { app, db, auth, storage, messaging };
   } catch (error) {
-    console.error("Failed to initialize Firebase:", error);
+    console.error("Firebase Initialization Error:", error);
     return { app: null, db: null, auth: null, storage: null, messaging: null };
   }
 }
@@ -59,6 +68,10 @@ export async function requestNotificationPermission(messaging: Messaging | null)
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
+      if (!firebaseConfig.vapidKey) {
+        console.warn("FCM: Missing VAPID key in configuration.");
+        return null;
+      }
       const token = await getToken(messaging, {
         vapidKey: firebaseConfig.vapidKey
       });
@@ -72,6 +85,7 @@ export async function requestNotificationPermission(messaging: Messaging | null)
 
 /**
  * A hook to memoize Firebase references and queries.
+ * Essential for preventing infinite loops in useCollection/useDoc.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: any[]): T {
   const ref = useRef<{ deps: any[]; value: T } | null>(null);
