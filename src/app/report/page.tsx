@@ -104,7 +104,10 @@ export default function ReportPage() {
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) return;
+    if (!user || !db || !storage) {
+      toast({ title: "Service not available", variant: "destructive" });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -188,7 +191,7 @@ export default function ReportPage() {
             <h1 className="text-2xl font-headline font-bold text-slate-900">New Report</h1>
             <p className="text-sm text-slate-500">Provide details about the local issue you are experiencing.</p>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-secondary border border-primary/10 rounded-full text-primary text-[10px] font-bold">
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-emerald-700 text-[10px] font-bold">
             <Globe size={12} /> Verified Location
           </div>
         </div>
@@ -206,7 +209,7 @@ export default function ReportPage() {
           </div>
         )}
 
-        <Card className="border border-slate-200 shadow-sm bg-white">
+        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
           <CardContent className="p-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -216,7 +219,9 @@ export default function ReportPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Title</FormLabel>
-                      <FormControl><Input placeholder="E.g., Infrastructure damage at Main St." {...field} /></FormControl>
+                      <FormControl>
+                        <Input placeholder="E.g., Infrastructure damage at Main St." {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -230,7 +235,11 @@ export default function ReportPage() {
                       <FormItem>
                         <FormLabel>Category</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
                           <SelectContent>
                             {['Road Damage', 'Garbage', 'Water Supply', 'Electricity', 'Streetlight', 'Drainage', 'Other'].map(c => (
                               <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -248,7 +257,11 @@ export default function ReportPage() {
                       <FormItem>
                         <FormLabel>Priority</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
                           <SelectContent>
                             {['Low', 'Medium', 'High', 'Critical'].map(p => (
                               <SelectItem key={p} value={p}>{p}</SelectItem>
@@ -267,25 +280,38 @@ export default function ReportPage() {
                     <FormItem>
                       <div className="flex items-center justify-between">
                         <FormLabel>Description</FormLabel>
-                        <Button type="button" variant="ghost" size="sm" className="text-primary h-auto p-0 font-bold text-xs hover:bg-transparent" onClick={handleAiCategorize} disabled={isAnalyzing}>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-emerald-600 h-auto p-0 font-bold text-xs hover:bg-transparent" 
+                          onClick={handleAiCategorize} 
+                          disabled={isAnalyzing}
+                        >
                           {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />} AI Assist
                         </Button>
                       </div>
-                      <FormControl><Textarea placeholder="Provide detailed information including landmarks..." className="min-h-[120px]" {...field} /></FormControl>
+                      <FormControl>
+                        <Textarea placeholder="Provide detailed information including landmarks..." className="min-h-[120px]" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
                 <div className="space-y-4">
-                  <FormLabel className="flex items-center gap-2 font-bold text-slate-700"><MapPin className="h-4 w-4" /> Location</FormLabel>
+                  <FormLabel className="flex items-center gap-2 font-bold text-slate-700">
+                    <MapPin className="h-4 w-4" /> Location
+                  </FormLabel>
                   <MapProvider>
                     <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
                   </MapProvider>
                 </div>
 
                 <div className="space-y-4">
-                  <FormLabel className="flex items-center gap-2 font-bold text-slate-700"><Camera className="h-4 w-4" /> Photo Evidence</FormLabel>
+                  <FormLabel className="flex items-center gap-2 font-bold text-slate-700">
+                    <Camera className="h-4 w-4" /> Photo Evidence
+                  </FormLabel>
                   {!imagePreview ? (
                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors border-slate-200">
                       <Camera className="w-8 h-8 text-slate-300" />
@@ -294,7 +320,7 @@ export default function ReportPage() {
                     </label>
                   ) : (
                     <div className="relative h-48 rounded-lg overflow-hidden border border-slate-200">
-                      <img src={imagePreview} className="w-full h-full object-cover" />
+                      <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
                       <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7 rounded-full" onClick={() => setImagePreview(null)}>
                         <X size={14} />
                       </Button>

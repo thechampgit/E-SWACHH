@@ -9,30 +9,41 @@ import { firebaseConfig } from './config';
 import { useMemo, useRef } from 'react';
 
 export function initializeFirebase(): { 
-  app: FirebaseApp; 
-  db: Firestore; 
-  auth: Auth; 
-  storage: FirebaseStorage;
+  app: FirebaseApp | null; 
+  db: Firestore | null; 
+  auth: Auth | null; 
+  storage: FirebaseStorage | null;
   messaging: Messaging | null;
 } {
-  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-  const storage = getStorage(app);
-  
-  let messaging: Messaging | null = null;
-  
-  if (typeof window !== 'undefined') {
-    isSupported().then(supported => {
-      if (supported && !messaging) {
-        messaging = getMessaging(app);
-      }
-    }).catch(err => {
-      console.warn('Messaging not supported or blocked:', err);
-    });
+  // If API key is missing, return nulls to prevent SDK crash
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "") {
+    console.error("Firebase API Key is missing. Skipping initialization.");
+    return { app: null, db: null, auth: null, storage: null, messaging: null };
   }
 
-  return { app, db, auth, storage, messaging };
+  try {
+    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+    
+    let messaging: Messaging | null = null;
+    
+    if (typeof window !== 'undefined') {
+      isSupported().then(supported => {
+        if (supported && !messaging) {
+          messaging = getMessaging(app);
+        }
+      }).catch(err => {
+        console.warn('Messaging not supported or blocked:', err);
+      });
+    }
+
+    return { app, db, auth, storage, messaging };
+  } catch (error) {
+    console.error("Failed to initialize Firebase:", error);
+    return { app: null, db: null, auth: null, storage: null, messaging: null };
+  }
 }
 
 export async function requestNotificationPermission(messaging: Messaging | null) {
