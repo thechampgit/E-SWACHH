@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, ReactNode } from 'react';
@@ -8,7 +7,7 @@ import { Auth } from 'firebase/auth';
 import { FirebaseStorage } from 'firebase/storage';
 import { Messaging } from 'firebase/messaging';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { ShieldAlert, RefreshCcw } from 'lucide-react';
+import { ShieldAlert, RefreshCcw, KeyRound, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { firebaseConfig } from './config';
 
@@ -37,44 +36,40 @@ export function FirebaseProvider({
   storage: FirebaseStorage | null;
   messaging: Messaging | null;
 }) {
-  // If the configuration is missing, show a descriptive diagnostic screen instead of crashing
+  // Diagnostic fallback for missing environment configuration
   if (!app || !db || !auth || !storage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-emerald-50/50 p-6">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-10 border border-emerald-100 text-center space-y-6">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
-            <ShieldAlert className="text-emerald-600 h-10 w-10" />
+      <div className="min-h-screen flex items-center justify-center bg-[#F1F7F5] p-6 font-body">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 border border-[#160 15% 88%] text-center space-y-8 animate-in fade-in zoom-in duration-500">
+          <div className="w-24 h-24 bg-[#E8F3EF] rounded-full flex items-center justify-center mx-auto ring-8 ring-[#F1F7F5]">
+            <KeyRound className="text-[#047857] h-10 w-10" />
           </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-headline font-bold text-slate-900">Setup Required</h1>
-            <p className="text-slate-500 text-sm leading-relaxed">
-              CivicPulse is ready to deploy, but it needs a valid Firebase configuration to connect to the municipal servers.
+          
+          <div className="space-y-3">
+            <h1 className="text-3xl font-headline font-extrabold text-[#1A2E28]">Secure Connect</h1>
+            <p className="text-[#160 15% 45%] text-sm leading-relaxed">
+              CivicPulse requires an active connection to the municipal governance cloud. Please configure your project credentials.
             </p>
           </div>
           
-          <div className="bg-slate-50 rounded-xl p-4 text-left border border-slate-100">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Connection Diagnostics</p>
-            <ul className="text-xs space-y-2 font-medium text-slate-600">
-              <li className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${firebaseConfig.apiKey ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                API Key: {firebaseConfig.apiKey ? 'Detected' : 'Missing'}
-              </li>
-              <li className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${firebaseConfig.projectId ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                Project ID: {firebaseConfig.projectId ? 'Detected' : 'Missing'}
-              </li>
-            </ul>
+          <div className="bg-[#F8FAFC] rounded-2xl p-6 text-left border border-slate-100 space-y-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Connection Diagnostics</p>
+            <div className="space-y-3">
+              <DiagnosticItem label="Authentication Gateway" status={!!firebaseConfig.apiKey} />
+              <DiagnosticItem label="Database Cluster" status={!!firebaseConfig.projectId} />
+              <DiagnosticItem label="Storage Infrastructure" status={!!firebaseConfig.storageBucket} />
+            </div>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-4 space-y-4">
             <Button 
               onClick={() => window.location.reload()} 
-              className="w-full flex items-center justify-center gap-2 h-12 font-bold shadow-lg shadow-emerald-200/50"
+              className="w-full flex items-center justify-center gap-2 h-14 font-bold rounded-xl shadow-xl shadow-emerald-900/10 bg-[#047857] hover:bg-[#065F46] transition-all"
             >
-              <RefreshCcw size={16} /> Refresh Connection
+              <RefreshCcw size={18} /> Re-verify Credentials
             </Button>
-            <p className="text-[10px] text-slate-400 mt-4 italic">
-              Check your project environment variables in settings.
+            <p className="text-[10px] text-slate-400 italic">
+              Credential changes usually require a browser refresh.
             </p>
           </div>
         </div>
@@ -87,6 +82,17 @@ export function FirebaseProvider({
       <FirebaseErrorListener />
       {children}
     </FirebaseContext.Provider>
+  );
+}
+
+function DiagnosticItem({ label, status }: { label: string; status: boolean }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-xs font-semibold text-slate-600">{label}</span>
+      <div className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${status ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+        {status ? 'Ready' : 'Pending'}
+      </div>
+    </div>
   );
 }
 

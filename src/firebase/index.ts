@@ -15,9 +15,16 @@ export function initializeFirebase(): {
   storage: FirebaseStorage | null;
   messaging: Messaging | null;
 } {
-  // If API key is missing, return nulls to prevent SDK crash
-  if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "") {
-    console.error("Firebase API Key is missing. Skipping initialization.");
+  // Protective check: If API key is missing or is a placeholder, return nulls
+  // This prevents the SDK from throwing a fatal 'invalid-api-key' error during render
+  const isConfigMissing = !firebaseConfig.apiKey || 
+                          firebaseConfig.apiKey === "" || 
+                          firebaseConfig.apiKey.includes("your-api-key");
+
+  if (isConfigMissing) {
+    if (typeof window !== 'undefined') {
+      console.warn("CivicPulse: Firebase API Key is missing. Using diagnostic mode.");
+    }
     return { app: null, db: null, auth: null, storage: null, messaging: null };
   }
 
@@ -65,7 +72,6 @@ export async function requestNotificationPermission(messaging: Messaging | null)
 
 /**
  * A hook to memoize Firebase references and queries.
- * This is crucial to prevent infinite re-render loops when passing refs to useDoc or useCollection.
  */
 export function useMemoFirebase<T>(factory: () => T, deps: any[]): T {
   const ref = useRef<{ deps: any[]; value: T } | null>(null);
