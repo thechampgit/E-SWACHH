@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, AlertCircle, ExternalLink } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -22,6 +22,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfigAlert, setShowConfigAlert] = useState(false);
   
   const router = useRouter();
   const auth = useAuth();
@@ -29,6 +30,8 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setShowConfigAlert(false);
+
     if (!auth || !db) {
       toast({
         variant: "destructive",
@@ -80,23 +83,21 @@ export default function SignupPage() {
       router.push('/dashboard');
     } catch (error: any) {
       console.error("Signup error:", error.code, error.message);
-      let message = error.message;
       
-      if (error.code === 'auth/configuration-not-found') {
-        message = "Email/Password sign-in is not enabled in the Firebase Console. Please contact the administrator.";
-      } else if (error.code === 'auth/email-already-in-use') {
-        message = "This email is already registered.";
-      } else if (error.code === 'auth/invalid-email') {
-        message = "Please enter a valid email address.";
-      } else if (error.code === 'auth/weak-password') {
-        message = "Password should be at least 6 characters.";
+      if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
+        setShowConfigAlert(true);
+        toast({
+          variant: "destructive",
+          title: "Setup Required",
+          description: "Email/Password sign-up is not enabled in the Firebase Console.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: error.message,
+        });
       }
-
-      toast({
-        variant: "destructive",
-        title: "Signup failed",
-        description: message,
-      });
     } finally {
       setIsLoading(false);
     }
@@ -112,10 +113,39 @@ export default function SignupPage() {
           <div className="mx-auto w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-2xl mb-4">
             C
           </div>
-          <CardTitle className="text-2xl font-bold font-headline">Create an account</CardTitle>
+          <CardTitle className="text-2xl font-bold font-headline text-slate-900">Create an account</CardTitle>
           <CardDescription>Join our community to report and track civic issues</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {showConfigAlert && (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-3">
+              <div className="flex gap-3">
+                <AlertCircle className="text-amber-600 h-5 w-5 shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-amber-900">Console Setup Needed</p>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    The <strong>Email/Password</strong> provider is disabled in your Firebase project. You must enable it to allow citizens to sign up.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full bg-white border-amber-200 text-amber-800 hover:bg-amber-100 h-9 text-xs font-bold"
+                asChild
+              >
+                <a 
+                  href="https://console.firebase.google.com/project/_/authentication/providers" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2"
+                >
+                  Open Firebase Console <ExternalLink size={12} />
+                </a>
+              </Button>
+            </div>
+          )}
+
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
