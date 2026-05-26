@@ -68,8 +68,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
     }
   };
 
-  const handleSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSearch = async () => {
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
@@ -93,6 +92,13 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
   const handleGetCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
@@ -112,7 +118,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
 
   return (
     <div className="space-y-4 w-full">
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
           <Input
@@ -120,14 +126,16 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
             className="pl-10 h-11"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         </div>
         <Button 
-          type="submit" 
+          type="button" 
           variant="outline" 
           size="icon" 
           className="h-11 w-11 bg-white"
           disabled={isSearching}
+          onClick={handleSearch}
         >
           {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
         </Button>
@@ -141,7 +149,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
         >
           <Navigation className="h-4 w-4" />
         </Button>
-      </form>
+      </div>
 
       <div className="relative overflow-hidden rounded-xl shadow-inner bg-slate-100 border border-slate-200 h-[400px] z-0">
         <MapContainer 
