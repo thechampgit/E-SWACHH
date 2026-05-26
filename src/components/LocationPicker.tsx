@@ -128,7 +128,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
         </Button>
       </div>
 
-      <div className="relative overflow-hidden rounded-xl shadow-inner bg-slate-100">
+      <div className="relative overflow-hidden rounded-xl shadow-inner bg-slate-100 border border-slate-200" style={{ minHeight: '400px' }}>
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           zoom={initialLocation ? 16 : 4}
