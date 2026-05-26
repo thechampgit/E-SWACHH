@@ -1,21 +1,26 @@
-
-"use client"
+'use client';
 
 import { useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useFirestore, useCollection } from '@/firebase';
 import { MapProvider } from '@/components/MapProvider';
-import { MainMap } from '@/components/MainMap';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   Layers, 
   MapPin, 
   AlertCircle,
-  TrendingUp,
-  Activity,
-  Filter
+  Activity
 } from 'lucide-react';
+
+// Dynamically import MainMap
+const MainMap = dynamic(
+  () => import('@/components/MainMap').then((mod) => mod.MainMap),
+  { 
+    ssr: false,
+    loading: () => <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">Loading spatial data...</div>
+  }
+);
 
 export default function AdminMapPage() {
   const db = useFirestore();
@@ -36,7 +41,7 @@ export default function AdminMapPage() {
   }, [complaints, statusFilter]);
 
   const stats = useMemo(() => {
-    if (!filteredComplaints) return { total: 0, highPriority: 0 };
+    if (!filteredComplaints) return { total: 0, highPriority: 0, unresolved: 0 };
     return {
       total: filteredComplaints.length,
       highPriority: filteredComplaints.filter(c => c.priority === 'High').length,

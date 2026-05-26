@@ -1,24 +1,28 @@
-
-"use client"
+'use client';
 
 import { useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useFirestore, useCollection } from '@/firebase';
 import { MapProvider } from '@/components/MapProvider';
-import { MainMap } from '@/components/MainMap';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Filter, 
   Layers, 
-  Map as MapIcon, 
   PlusCircle, 
-  Search,
   ArrowLeft,
   Loader2
 } from 'lucide-react';
 import Link from 'next/link';
-import { Input } from '@/components/ui/input';
+
+// Dynamically import MainMap
+const MainMap = dynamic(
+  () => import('@/components/MainMap').then((mod) => mod.MainMap),
+  { 
+    ssr: false,
+    loading: () => <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400">Initializing Impact Map...</div>
+  }
+);
 
 export default function PublicMapPage() {
   const db = useFirestore();
@@ -66,7 +70,6 @@ export default function PublicMapPage() {
       </header>
 
       <div className="flex-1 relative overflow-hidden flex flex-col md:flex-row">
-        {/* Map Sidebar / Controls */}
         <aside className="w-full md:w-80 bg-white border-r p-6 shrink-0 z-10 overflow-y-auto">
           <div className="space-y-6">
             <div className="space-y-4">
@@ -117,16 +120,12 @@ export default function PublicMapPage() {
                       <p className="text-[10px] text-slate-500 mt-1 line-clamp-1">{c.location.address}</p>
                     </div>
                   ))}
-                  {filteredComplaints.length > 10 && (
-                    <p className="text-[10px] text-center text-slate-400 italic">Showing top 10 results</p>
-                  )}
                 </div>
               )}
             </div>
           </div>
         </aside>
 
-        {/* Map Container */}
         <main className="flex-1 h-full">
           <MapProvider>
             <MainMap complaints={filteredComplaints} showHeatmap={showHeatmap} />

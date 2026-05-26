@@ -1,23 +1,12 @@
-
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation, Search, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
-
-// Fix for default marker icons in Leaflet with Next.js
-const customIcon = L.divIcon({
-  html: `<div class="bg-primary p-2 rounded-full border-2 border-white shadow-lg text-white">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-         </div>`,
-  className: '',
-  iconSize: [36, 36],
-  iconAnchor: [18, 36],
-});
 
 interface LocationPickerProps {
   onLocationSelect: (location: { address: string; latitude: number; longitude: number }) => void;
@@ -48,6 +37,19 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
   const [address, setAddress] = useState(initialLocation?.address || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+
+  // Memoize icon to ensure it's only created on the client
+  const customIcon = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return L.divIcon({
+      html: `<div class="bg-primary p-2 rounded-full border-2 border-white shadow-lg text-white">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+             </div>`,
+      className: '',
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+    });
+  }, []);
 
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
@@ -106,6 +108,8 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
     }
   };
 
+  if (typeof window === 'undefined') return null;
+
   return (
     <div className="space-y-4 w-full">
       <form onSubmit={handleSearch} className="flex gap-2">
@@ -151,7 +155,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <MapEvents onMapClick={reverseGeocode} />
-          {position && (
+          {position && customIcon && (
             <>
               <Marker position={position} icon={customIcon} />
               <ChangeView center={position} />

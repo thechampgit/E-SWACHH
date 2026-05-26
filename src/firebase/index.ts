@@ -10,8 +10,7 @@ import { useRef } from 'react';
 
 /**
  * Initializes Firebase services safely using a singleton pattern.
- * Core services (App, Auth, Firestore, Storage) are initialized immediately.
- * Messaging is handled as an optional, secondary service.
+ * Strictly client-side to prevent SSR failures.
  */
 let cachedApp: FirebaseApp | null = null;
 let cachedDb: Firestore | null = null;
@@ -25,6 +24,11 @@ export function initializeFirebase(): {
   storage: FirebaseStorage | null;
   messaging: Messaging | null;
 } {
+  // Ensure we are in a browser environment
+  if (typeof window === 'undefined') {
+    return { app: null, db: null, auth: null, storage: null, messaging: null };
+  }
+
   if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "") {
     return { app: null, db: null, auth: null, storage: null, messaging: null };
   }
@@ -42,7 +46,7 @@ export function initializeFirebase(): {
       db: cachedDb, 
       auth: cachedAuth, 
       storage: cachedStorage, 
-      messaging: null // Messaging will be handled by requestNotificationPermission on demand
+      messaging: null 
     };
   } catch (error) {
     console.error("Firebase Initialization Error:", error);
@@ -72,10 +76,6 @@ export async function requestNotificationPermission(app: FirebaseApp | null) {
   return null;
 }
 
-/**
- * A hook to memoize Firebase references and queries.
- * Essential for preventing infinite loops in useCollection/useDoc.
- */
 export function useMemoFirebase<T>(factory: () => T, deps: any[]): T {
   const ref = useRef<{ deps: any[]; value: T } | null>(null);
   const hasChanged = !ref.current || !deps.every((dep, i) => dep === ref.current?.deps[i]);

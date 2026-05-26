@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,8 +33,16 @@ import { addDoc, collection, serverTimestamp, doc, updateDoc, increment } from '
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useFirestore, useStorage, useUser } from '@/firebase';
 import { MapProvider } from '@/components/MapProvider';
-import { LocationPicker } from '@/components/LocationPicker';
 import { addHours, addDays } from 'date-fns';
+
+// Dynamically import LocationPicker to prevent SSR issues with Leaflet
+const LocationPicker = dynamic(
+  () => import('@/components/LocationPicker').then((mod) => mod.LocationPicker),
+  { 
+    ssr: false,
+    loading: () => <div className="h-[400px] w-full bg-slate-100 animate-pulse rounded-xl flex items-center justify-center text-slate-400">Loading Map Engine...</div>
+  }
+);
 
 const formSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters." }),
@@ -157,12 +166,10 @@ export default function ReportPage() {
 
       const docRef = await addDoc(collection(db, "complaints"), complaintData);
 
-      // Non-blocking update for contribution level
       updateDoc(doc(db, 'users', user.uid), {
         contributionLevel: increment(10)
       }).catch(e => console.warn("Failed to update points", e));
 
-      // Non-blocking notification
       addDoc(collection(db, "notifications"), {
         userId: user.uid,
         title: "Report Submitted",
