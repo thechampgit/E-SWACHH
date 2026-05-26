@@ -1,15 +1,11 @@
+@import "leaflet/dist/leaflet.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Emerald Moss Serenity Palette */
-    /* Emerald: #047857 (160 84% 25%) */
-    /* Moss: #809A6F (93 17% 52%) */
-    /* Serenity: #F1F7F5 (160 20% 96%) */
-    /* Foreground: #1A2E28 (160 28% 14%) */
-
     --background: 160 20% 97%;
     --foreground: 160 28% 14%;
     --card: 0 0% 100%;
@@ -43,6 +39,33 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline font-bold tracking-tight text-slate-900;
   }
+}
+
+/* Leaflet Overrides */
+.leaflet-container {
+  @apply rounded-xl font-body;
+  background-color: #f1f7f5 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-lg shadow-xl border-none p-0 overflow-hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+}
+
+.leaflet-popup-tip-container {
+  display: none;
+}
+
+.leaflet-control-zoom {
+  @apply border-none shadow-md rounded-lg overflow-hidden !important;
+}
+
+.leaflet-control-zoom-in, .leaflet-control-zoom-out {
+  @apply bg-white text-slate-600 border-none hover:bg-slate-50 !important;
 }
 
 /* Minimalist Utilities */
