@@ -1,22 +1,23 @@
-
 'use client';
 
 import React, { useState, useCallback } from 'react';
 import { GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
-import { MapPin, Navigation, AlertCircle } from 'lucide-react';
+import { MapPin, Navigation, AlertCircle, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const mapContainerStyle = {
   width: '100%',
-  height: '350px',
+  height: '400px',
+  minHeight: '400px',
   borderRadius: '0.75rem',
+  border: '1px solid #e2e8f0',
 };
 
-// Sensible global default (e.g., center of map)
-const center = {
-  lat: 0,
-  lng: 0,
+// Default center: India
+const defaultCenter = {
+  lat: 20.5937,
+  lng: 78.9629,
 };
 
 interface LocationPickerProps {
@@ -30,14 +31,22 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
   );
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   const [address, setAddress] = useState(initialLocation?.address || '');
-  const [error, setError] = useState<string | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const setLocationDetails = (lat: number, lng: number, addr: string) => {
-    setError(null);
     setMarker({ lat, lng });
     setAddress(addr);
     onLocationSelect({ address: addr, latitude: lat, longitude: lng });
+    
+    if (map) {
+      map.panTo({ lat, lng });
+      map.setZoom(16);
+    }
   };
+
+  const onMapLoad = useCallback((mapInstance: google.maps.Map) => {
+    setMap(mapInstance);
+  }, []);
 
   const onMapClick = useCallback((e: google.maps.MapMouseEvent) => {
     if (e.latLng) {
@@ -45,7 +54,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
       const lng = e.latLng.lng();
       reverseGeocode(lat, lng);
     }
-  }, []);
+  }, [map]);
 
   const reverseGeocode = (lat: number, lng: number) => {
     const geocoder = new google.maps.Geocoder();
@@ -92,56 +101,74 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <div className="flex-1">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
           <Autocomplete 
             onLoad={onAutocompleteLoad} 
             onPlaceChanged={onPlaceChanged}
           >
             <input
               type="text"
-              placeholder="Search for a location..."
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="Search for an address or landmark..."
+              className="flex h-11 w-full rounded-md border border-input bg-white pl-10 pr-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 shadow-sm"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
           </Autocomplete>
         </div>
-        <Button type="button" variant="outline" size="icon" onClick={handleGetCurrentLocation} title="Use my current location">
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="icon" 
+          className="h-11 w-11 shrink-0 bg-white"
+          onClick={handleGetCurrentLocation} 
+          title="Use my current location"
+        >
           <Navigation className="h-4 w-4" />
         </Button>
       </div>
 
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-red-600 text-xs font-medium">
-          <AlertCircle size={14} />
-          {error}
-        </div>
-      )}
+      <div className="relative overflow-hidden rounded-xl shadow-inner bg-slate-100">
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          zoom={initialLocation ? 16 : 4}
+          center={marker || defaultCenter}
+          onLoad={onMapLoad}
+          onClick={onMapClick}
+          options={{
+            disableDefaultUI: false,
+            zoomControl: true,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            styles: [
+              {
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [{ visibility: "off" }]
+              }
+            ]
+          }}
+        >
+          {marker && <Marker position={marker} animation={google.maps.Animation.DROP} />}
+        </GoogleMap>
+        
+        {!marker && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full border shadow-lg flex items-center gap-2 text-xs font-bold text-slate-600 animate-bounce">
+              <MapPin size={14} className="text-primary" /> Click on map to set location
+            </div>
+          </div>
+        )}
+      </div>
 
-      <GoogleMap
-        mapContainerStyle={mapContainerStyle}
-        zoom={2}
-        center={marker || center}
-        onClick={onMapClick}
-        options={{
-          disableDefaultUI: true,
-          zoomControl: true,
-          styles: [
-            {
-              featureType: "poi",
-              elementType: "labels",
-              stylers: [{ visibility: "off" }]
-            }
-          ]
-        }}
-      >
-        {marker && <Marker position={marker} animation={google.maps.Animation.DROP} />}
-      </GoogleMap>
-
-      {address && !error && (
-        <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100 text-xs text-blue-700 font-medium">
-          <MapPin className="h-4 w-4 shrink-0" />
-          <span>{address}</span>
+      {address && (
+        <div className="flex items-start gap-2 p-4 bg-emerald-50/50 rounded-lg border border-emerald-100 text-xs text-emerald-700 font-medium">
+          <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold uppercase tracking-widest text-[10px] text-emerald-600/60">Selected Location</p>
+            <p>{address}</p>
+          </div>
         </div>
       )}
     </div>
