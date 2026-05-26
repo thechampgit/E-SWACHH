@@ -157,11 +157,13 @@ export default function ReportPage() {
 
       const docRef = await addDoc(collection(db, "complaints"), complaintData);
 
-      await updateDoc(doc(db, 'users', user.uid), {
+      // Non-blocking update for contribution level
+      updateDoc(doc(db, 'users', user.uid), {
         contributionLevel: increment(10)
-      });
+      }).catch(e => console.warn("Failed to update points", e));
 
-      await addDoc(collection(db, "notifications"), {
+      // Non-blocking notification
+      addDoc(collection(db, "notifications"), {
         userId: user.uid,
         title: "Report Submitted",
         message: `Your report has been logged. Priority: ${values.priority}. Target resolution: ${slaDeadline.toLocaleDateString()}.`,
@@ -169,7 +171,7 @@ export default function ReportPage() {
         complaintId: docRef.id,
         read: false,
         createdAt: serverTimestamp()
-      });
+      }).catch(e => console.warn("Failed to send notification", e));
 
       toast({ title: "Report Submitted Successfully" });
       router.push(`/track/${docRef.id}`);
@@ -303,9 +305,11 @@ export default function ReportPage() {
                   <FormLabel className="flex items-center gap-2 font-bold text-slate-700">
                     <MapPin className="h-4 w-4" /> Location
                   </FormLabel>
-                  <MapProvider>
-                    <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
-                  </MapProvider>
+                  <div className="w-full min-h-[400px]">
+                    <MapProvider>
+                      <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
+                    </MapProvider>
+                  </div>
                 </div>
 
                 <div className="space-y-4">
@@ -321,7 +325,7 @@ export default function ReportPage() {
                   ) : (
                     <div className="relative h-48 rounded-lg overflow-hidden border border-slate-200">
                       <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
-                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7 rounded-full" onClick={() => setImagePreview(null)}>
+                      <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7 rounded-full" onClick={() => setImagePreview(null)}>
                         <X size={14} />
                       </Button>
                     </div>

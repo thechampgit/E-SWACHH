@@ -3,18 +3,14 @@
 import React, { useState, useCallback } from 'react';
 import { GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
-import { MapPin, Navigation, AlertCircle, Search } from 'lucide-react';
+import { MapPin, Navigation, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const mapContainerStyle = {
   width: '100%',
   height: '400px',
-  minHeight: '400px',
-  borderRadius: '0.75rem',
-  border: '1px solid #e2e8f0',
 };
 
-// Default center: India
 const defaultCenter = {
   lat: 20.5937,
   lng: 78.9629,
@@ -62,6 +58,9 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
       if (status === 'OK' && results?.[0]) {
         const addr = results[0].formatted_address;
         setLocationDetails(lat, lng, addr);
+      } else {
+        // Fallback for click if reverse geocoding fails or API not enabled
+        setLocationDetails(lat, lng, `Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
       }
     });
   };
@@ -99,7 +98,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
@@ -128,7 +127,7 @@ export function LocationPicker({ onLocationSelect, initialLocation }: LocationPi
         </Button>
       </div>
 
-      <div className="relative overflow-hidden rounded-xl shadow-inner bg-slate-100 border border-slate-200" style={{ minHeight: '400px' }}>
+      <div className="relative overflow-hidden rounded-xl shadow-inner bg-slate-100 border border-slate-200 min-h-[400px]">
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           zoom={initialLocation ? 16 : 4}

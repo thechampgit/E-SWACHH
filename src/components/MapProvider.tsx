@@ -9,13 +9,14 @@ import { Button } from '@/components/ui/button';
 const libraries: Libraries = ['places', 'visualization'];
 
 export function MapProvider({ children }: { children: React.ReactNode }) {
-  // Priority: 1. Specific Maps Key, 2. Firebase Key from config
+  // Use explicit Maps Key if provided, otherwise fallback to Firebase API Key
   const apiKey = 
     process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 
     firebaseConfig.apiKey || 
     '';
 
   const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
     googleMapsApiKey: apiKey,
     libraries,
   });
@@ -48,7 +49,7 @@ export function MapProvider({ children }: { children: React.ReactNode }) {
                 </a>
               </Button>
               <p className="text-[10px] mt-4 font-mono text-red-500 uppercase font-bold tracking-tighter">
-                Required APIs: Maps JavaScript API & Places API
+                Required: Maps JavaScript API & Places API
               </p>
             </div>
           )}
@@ -61,12 +62,12 @@ export function MapProvider({ children }: { children: React.ReactNode }) {
 
   if (!isLoaded) {
     return (
-      <div className="flex flex-col items-center justify-center p-20 gap-3 bg-slate-50 rounded-xl border border-dashed min-h-[400px]">
+      <div className="flex flex-col items-center justify-center p-20 gap-3 bg-slate-50 rounded-xl border border-dashed min-h-[400px] w-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Initializing Spatial Engine</span>
       </div>
     );
   }
 
-  return <>{children}</>;
+  return <div className="w-full h-full min-h-[inherit]">{children}</div>;
 }
