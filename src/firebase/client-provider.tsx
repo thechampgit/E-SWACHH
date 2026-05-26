@@ -1,15 +1,32 @@
-
 'use client';
 
-import React, { useMemo, ReactNode } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import { initializeFirebase } from './index';
 import { FirebaseProvider } from './provider';
 
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
-  const { app, db, auth, storage, messaging } = useMemo(() => initializeFirebase(), []);
+  const [services, setServices] = useState<{
+    app: any;
+    db: any;
+    auth: any;
+    storage: any;
+    messaging: any;
+  } | null>(null);
+
+  useEffect(() => {
+    // Initialize only on client mount to prevent hydration mismatches
+    const initialized = initializeFirebase();
+    setServices(initialized);
+  }, []);
 
   return (
-    <FirebaseProvider app={app} db={db} auth={auth} storage={storage} messaging={messaging}>
+    <FirebaseProvider 
+      app={services?.app ?? null} 
+      db={services?.db ?? null} 
+      auth={services?.auth ?? null} 
+      storage={services?.storage ?? null} 
+      messaging={services?.messaging ?? null}
+    >
       {children}
     </FirebaseProvider>
   );

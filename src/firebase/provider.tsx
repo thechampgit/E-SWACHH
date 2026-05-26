@@ -1,13 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
 import { FirebaseStorage } from 'firebase/storage';
 import { Messaging } from 'firebase/messaging';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { ShieldAlert, RefreshCcw, KeyRound, CheckCircle2, AlertCircle } from 'lucide-react';
+import { KeyRound, RefreshCcw, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { firebaseConfig } from './config';
 
@@ -36,8 +36,16 @@ export function FirebaseProvider({
   storage: FirebaseStorage | null;
   messaging: Messaging | null;
 }) {
-  // Diagnostic fallback for missing environment configuration
-  if (!app || !db || !auth || !storage) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const isConfigMissing = !firebaseConfig.apiKey || firebaseConfig.apiKey === "";
+
+  // Only show diagnostic fallback if we are on the client and config is actually missing
+  if (isMounted && isConfigMissing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F1F7F5] p-6 font-body">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 border border-[#e2e8f0] text-center space-y-8 animate-in fade-in zoom-in duration-500">
@@ -68,11 +76,19 @@ export function FirebaseProvider({
             >
               <RefreshCcw size={18} /> Re-verify Credentials
             </Button>
-            <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400">
-              <AlertCircle size={12} />
-              <span>Credential changes require a browser refresh.</span>
-            </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If we don't have instances yet but config is present, show a simple loader
+  if (!app || !db || !auth || !storage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Connecting to Governance Cloud</span>
         </div>
       </div>
     );

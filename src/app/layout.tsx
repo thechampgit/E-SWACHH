@@ -1,4 +1,3 @@
-
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
@@ -44,13 +43,13 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background">
         <GlobalErrorBoundary>
-          <FirebaseClientProvider>
-            <ClientOnly>
+          <ClientOnly>
+            <FirebaseClientProvider>
               {children}
               <AiChatbot />
               <Toaster />
-            </ClientOnly>
-          </FirebaseClientProvider>
+            </FirebaseClientProvider>
+          </ClientOnly>
         </GlobalErrorBoundary>
       </body>
     </html>
