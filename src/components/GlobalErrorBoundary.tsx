@@ -42,7 +42,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             <CardContent className="space-y-6">
               <div className="text-center space-y-2">
                 <p className="text-slate-500 text-sm">
-                  CivicPulse encountered a critical runtime error. This has been logged for our engineering team.
+                  e-Swachh encountered a critical runtime error. This has been logged for our engineering team.
                 </p>
                 {process.env.NODE_ENV === 'development' && this.state.error && (
                   <div className="mt-4 p-3 bg-slate-900 rounded-md text-left overflow-x-auto">

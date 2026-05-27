@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export function AiChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model', content: string }[]>([
-    { role: 'model', content: "Hello! I'm your CivicPulse Assistant. How can I help you improve the city today?" }
+    { role: 'model', content: "Hello! I'm your e-Swachh Assistant. How can I help you improve the city today?" }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

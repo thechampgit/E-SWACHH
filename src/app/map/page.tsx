@@ -52,7 +52,7 @@ export default function PublicMapPage() {
             <ArrowLeft size={20} />
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">C</div>
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">eS</div>
             <h1 className="text-xl font-headline font-bold text-slate-900 hidden sm:block">Impact Map</h1>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default function PublicMapPage() {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-600">Category</label>
                 <div className="flex flex-wrap gap-2">
-                  {['All', 'Road Damage', 'Garbage', 'Water Supply', 'Electricity', 'Streetlight', 'Drainage'].map(cat => (
+                  {['All', 'Garbage Collection Delays', 'Overflowing Dustbins', 'Illegal Dumping of Waste', 'Poor Street Cleaning', 'Lack of Public Toilets', 'Open Drains & Unhygienic Areas', 'Potholes & Damaged Roads', 'Broken Footpaths', 'Waterlogging During Rain', 'Poor Drainage Systems', 'Unsafe Bridges & Crossings', 'Encroachment on Public Roads', 'Other'].map(cat => (
                     <Badge 
                       key={cat} 
                       variant={categoryFilter === cat ? "default" : "outline"}

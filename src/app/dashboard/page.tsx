@@ -16,7 +16,8 @@ import {
   MapPin,
   LogOut,
   Bell,
-  Clock
+  Clock,
+  User
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -57,16 +58,21 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="fixed top-0 z-[100] w-full border-b bg-white h-16">
+    <div className="min-h-screen bg-slate-50 flex flex-col transition-colors duration-350">
+      <header className="fixed top-0 z-[100] w-full border-b bg-white/95 backdrop-blur-md h-16">
         <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold">C</div>
-            <span className="text-lg font-headline font-bold text-slate-900">CivicPulse</span>
+            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold">eS</div>
+            <span className="text-lg font-headline font-bold text-slate-900">e-Swachh</span>
           </Link>
           <div className="flex items-center gap-4">
             <NotificationCenter />
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full">
+            <Button variant="ghost" size="icon" asChild className="rounded-full">
+              <Link href="/profile" title="View Profile">
+                <User className="h-4 w-4 text-slate-600" />
+              </Link>
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full hover:text-destructive hover:bg-destructive/10" title="Logout">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -133,7 +139,7 @@ export default function DashboardPage() {
 
 function StatCard({ label, value, icon }: any) {
   return (
-    <Card className="shadow-sm border border-slate-200">
+    <Card className="shadow-sm border border-slate-200 bg-white">
       <CardContent className="p-6 flex items-center gap-4">
         <div className="p-2 bg-slate-50 rounded-lg">{icon}</div>
         <div>
@@ -153,7 +159,7 @@ function ComplaintCard({ complaint }: any) {
   };
 
   return (
-    <Card className="group overflow-hidden border border-slate-200 shadow-sm hover:border-primary/50 transition-all">
+    <Card className="group overflow-hidden border border-slate-200 shadow-sm hover:border-primary/50 transition-all bg-white">
       {complaint.imageUrl && (
         <div className="h-40 w-full overflow-hidden border-b">
           <img src={complaint.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

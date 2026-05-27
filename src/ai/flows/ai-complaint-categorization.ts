@@ -26,12 +26,18 @@ export type AiComplaintCategorizationInput = z.infer<
 const AiComplaintCategorizationOutputSchema = z.object({
   category: z
     .enum([
-      'Road Damage',
-      'Garbage',
-      'Water Supply',
-      'Electricity',
-      'Streetlight',
-      'Drainage',
+      'Garbage Collection Delays',
+      'Overflowing Dustbins',
+      'Illegal Dumping of Waste',
+      'Poor Street Cleaning',
+      'Lack of Public Toilets',
+      'Open Drains & Unhygienic Areas',
+      'Potholes & Damaged Roads',
+      'Broken Footpaths',
+      'Waterlogging During Rain',
+      'Poor Drainage Systems',
+      'Unsafe Bridges & Crossings',
+      'Encroachment on Public Roads',
       'Other',
     ])
     .describe('The most appropriate category for the civic issue.'),
