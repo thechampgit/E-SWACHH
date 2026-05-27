@@ -17,7 +17,10 @@ import {
   LogOut,
   Bell,
   Clock,
-  User
+  User,
+  Trophy,
+  Gift,
+  LayoutDashboard
 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -94,10 +97,34 @@ export default function DashboardPage() {
           </Button>
         </div>
 
+        {/* SUB-NAVIGATION TABS */}
+        <div className="border-b border-slate-200">
+          <div className="flex gap-8">
+            <Link 
+              href="/dashboard" 
+              className="border-b-2 border-primary pb-3 text-sm font-bold text-primary flex items-center gap-2 transition-all"
+            >
+              <LayoutDashboard className="h-4 w-4" /> My Dashboard
+            </Link>
+            <Link 
+              href="/dashboard/leaderboard" 
+              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-900 hover:border-slate-300 flex items-center gap-2 transition-all"
+            >
+              <Trophy className="h-4 w-4" /> Swachh Warriors
+            </Link>
+            <Link 
+              href="/dashboard/rewards" 
+              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-900 hover:border-slate-300 flex items-center gap-2 transition-all"
+            >
+              <Gift className="h-4 w-4" /> Eco Rewards
+            </Link>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Total Reports" value={stats.total} icon={<Activity className="text-blue-500" />} />
           <StatCard label="Resolved" value={stats.resolved} icon={<CheckCircle2 className="text-emerald-500" />} />
-          <StatCard label="Points Earned" value={stats.total * 10} icon={<Activity className="text-amber-500" />} />
+          <StatCard label="Points Earned" value={stats.total * 10} icon={<Trophy className="text-amber-500 animate-pulse" />} href="/dashboard/rewards" />
           <StatCard label="In Progress" value={stats.total - stats.resolved} icon={<Clock className="text-slate-500" />} />
         </div>
 
@@ -137,18 +164,26 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({ label, value, icon }: any) {
-  return (
-    <Card className="shadow-sm border border-slate-200 bg-white">
+function StatCard({ label, value, icon, href }: any) {
+  const cardContent = (
+    <Card className={`shadow-sm border border-slate-200 bg-white h-full ${href ? "hover:shadow-md hover:border-amber-500/50 transition-all cursor-pointer group/stat" : ""}`}>
       <CardContent className="p-6 flex items-center gap-4">
-        <div className="p-2 bg-slate-50 rounded-lg">{icon}</div>
+        <div className="p-2 bg-slate-50 rounded-lg group-hover/stat:bg-amber-50 transition-colors">{icon}</div>
         <div>
-          <p className="text-2xl font-headline font-bold text-slate-900">{value}</p>
+          <p className="text-2xl font-headline font-bold text-slate-900 flex items-center gap-1">
+            {value}
+            {href && <ArrowUpRight className="h-4 w-4 text-slate-400 group-hover/stat:text-amber-500 group-hover/stat:translate-x-0.5 group-hover/stat:-translate-y-0.5 transition-all" />}
+          </p>
           <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{label}</p>
         </div>
       </CardContent>
     </Card>
   );
+
+  if (href) {
+    return <Link href={href} className="block h-full">{cardContent}</Link>;
+  }
+  return cardContent;
 }
 
 function ComplaintCard({ complaint }: any) {
@@ -185,3 +220,4 @@ function ComplaintCard({ complaint }: any) {
     </Card>
   );
 }
+
