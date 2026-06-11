@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth, useFirestore } from '@/firebase';
+import { auth, db } from '@/lib/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,12 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
   const [mode, setMode] = useState<'login' | 'signup'>(defaultMode);
   
   // Login Form States
-  const [loginEmail, setLoginEmail] = useState('');
+  const [loginEmail, setLoginEmail] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('savedEmail') || '';
+    }
+    return '';
+  });
   const [loginPassword, setLoginPassword] = useState('');
   
   // Signup Form States
@@ -38,8 +43,7 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
   
   const router = useRouter();
   const searchParams = useSearchParams();
-  const auth = useAuth();
-  const db = useFirestore();
+  
 
   // Listen to search param mode changes
   useEffect(() => {
@@ -136,8 +140,8 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
         });
 
       toast({
-        title: "Account created",
-        description: "Welcome to e-Swachh!",
+        title: "Account created successfully",
+        description: "Welcome to E-Swachh!",
       });
       router.push('/dashboard');
     } catch (error: any) {
@@ -173,11 +177,9 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
         {/* Customized Logo Grid */}
         <div className="flex justify-center mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded bg-cyan-600 flex items-center justify-center text-white font-bold text-lg">
-              eS
-            </div>
-            <span className="text-xl font-headline font-extrabold tracking-wider text-slate-900">
-              e-Swachh
+            <img src="/logo.png" alt="E-Swachh Logo" className="w-10 h-10 object-contain rounded-md" />
+            <span className="text-xl font-headline font-extrabold tracking-wider text-cyan-900">
+              E-Swachh
             </span>
           </div>
         </div>
@@ -227,7 +229,7 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
                 <Input 
                   id="login-email" 
                   type="email" 
-                  placeholder="name@swachh.gov.in" 
+                  placeholder="mallya@gmail.com" 
                   value={loginEmail} 
                   onChange={(e) => setLoginEmail(e.target.value)} 
                   required 
@@ -248,6 +250,7 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
                 <Input 
                   id="login-password" 
                   type="password" 
+                  placeholder="*******"
                   value={loginPassword} 
                   onChange={(e) => setLoginPassword(e.target.value)} 
                   required 
@@ -295,10 +298,10 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
               <div className="space-y-2">
                 <Label htmlFor="signup-name" className="text-xs font-bold uppercase tracking-wider text-slate-700">Full Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+                  <User className="absolute left-3.5 top-3.5 h-4 w-4 text-6c757d-400" />
                   <Input 
                     id="signup-name" 
-                    placeholder="John Doe" 
+                    placeholder="Vijay Mallya" 
                     value={signupName} 
                     onChange={(e) => setSignupName(e.target.value)} 
                     required 
@@ -315,7 +318,7 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
                     <Input 
                       id="signup-email" 
                       type="email" 
-                      placeholder="john@gmail.com" 
+                      placeholder="mallya@gmail.com" 
                       value={signupEmail} 
                       onChange={(e) => setSignupEmail(e.target.value)} 
                       required 
@@ -348,6 +351,7 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
                     <Input 
                       id="signup-password" 
                       type="password" 
+                      placeholder="*******"
                       value={signupPassword} 
                       onChange={(e) => setSignupPassword(e.target.value)} 
                       required 
@@ -362,6 +366,7 @@ export function AuthCard({ defaultMode = 'login' }: AuthCardProps) {
                     <Input 
                       id="signup-confirmPassword" 
                       type="password" 
+                      placeholder="*******"
                       value={signupConfirmPassword} 
                       onChange={(e) => setSignupConfirmPassword(e.target.value)} 
                       required 

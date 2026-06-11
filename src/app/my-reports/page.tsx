@@ -127,6 +127,9 @@ function ReportListItem({ report }: any) {
     "In Progress": "bg-orange-100 text-orange-700",
     "Resolved": "bg-green-100 text-green-700",
   };
+  const locationAddress = typeof report.location === 'string'
+    ? report.location
+    : report.location?.address || 'Location provided';
 
   return (
     <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-white group">
@@ -159,7 +162,7 @@ function ReportListItem({ report }: any) {
           <div>
             <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors line-clamp-1">{report.title}</h3>
             <p className="text-sm text-slate-500 line-clamp-1 flex items-center gap-1 mt-1">
-              <MapPin size={12} /> {report.location}
+              <MapPin size={12} /> {locationAddress}
             </p>
           </div>
 

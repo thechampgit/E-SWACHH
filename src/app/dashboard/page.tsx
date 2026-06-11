@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { useFirestore, useCollection, useUser, useAuth, useMemoFirebase } from '@/firebase';
+import { useLogoutConfirm } from '@/context/LogoutConfirmContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,25 +55,32 @@ export default function DashboardPage() {
     };
   }, [complaints]);
 
+  const { confirmLogout } = useLogoutConfirm();
+
   const handleLogout = async () => {
-    if (!auth) return;
-    await signOut(auth);
-    router.push('/');
+    confirmLogout(async () => {
+      if (!auth) return;
+      await signOut(auth);
+      router.push('/');
+    });
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col transition-colors duration-350">
-      <header className="fixed top-0 z-[100] w-full border-b bg-white/95 backdrop-blur-md h-16">
+    <div 
+      className="min-h-screen flex flex-col transition-colors duration-350 bg-no-repeat bg-fixed"
+      style={{ backgroundImage: "url('/portal_bg.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
+    >
+      <header className="fixed top-0 z-[100] w-full border-b dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md h-16">
         <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold">eS</div>
-            <span className="text-lg font-headline font-bold text-slate-900">e-Swachh</span>
+            <img src="/logo.png" alt="E-Swachh Logo" className="w-8 h-8 object-contain rounded-md" />
+            <span className="text-lg font-headline font-bold text-slate-900 dark:text-slate-100">E-Swachh</span>
           </Link>
           <div className="flex items-center gap-4">
             <NotificationCenter />
             <Button variant="ghost" size="icon" asChild className="rounded-full">
               <Link href="/profile" title="View Profile">
-                <User className="h-4 w-4 text-slate-600" />
+                <User className="h-4 w-4 text-slate-600 dark:text-slate-400" />
               </Link>
             </Button>
             <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full hover:text-destructive hover:bg-destructive/10" title="Logout">
@@ -88,7 +96,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-headline font-bold text-slate-900">
               Welcome, {user?.displayName?.split(' ')[0] || 'Citizen'}
             </h1>
-            <p className="text-sm text-slate-500">Monitor your civic reports and track neighborhood impact.</p>
+            <p className="text-sm text-slate-600">Monitor your civic reports and track neighborhood impact.</p>
           </div>
           <Button asChild>
             <Link href="/report">
@@ -102,19 +110,19 @@ export default function DashboardPage() {
           <div className="flex gap-8">
             <Link 
               href="/dashboard" 
-              className="border-b-2 border-primary pb-3 text-sm font-bold text-primary flex items-center gap-2 transition-all"
+              className="border-b-2 border-cyan-600 pb-3 text-sm font-bold text-cyan-600 flex items-center gap-2 transition-all"
             >
               <LayoutDashboard className="h-4 w-4" /> My Dashboard
             </Link>
             <Link 
               href="/dashboard/leaderboard" 
-              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-900 hover:border-slate-300 flex items-center gap-2 transition-all"
+              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:border-slate-400 flex items-center gap-2 transition-all"
             >
               <Trophy className="h-4 w-4" /> Swachh Warriors
             </Link>
             <Link 
               href="/dashboard/rewards" 
-              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-900 hover:border-slate-300 flex items-center gap-2 transition-all"
+              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:border-slate-400 flex items-center gap-2 transition-all"
             >
               <Gift className="h-4 w-4" /> Eco Rewards
             </Link>
@@ -130,7 +138,7 @@ export default function DashboardPage() {
 
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-headline font-bold text-slate-900">Recent Activity</h2>
+            <h2 className="text-lg font-headline font-bold text-slate-900 dark:text-slate-100">Recent Activity</h2>
             <Button variant="ghost" size="sm" asChild className="text-primary font-bold">
               <Link href="/my-reports">View All <ArrowUpRight className="ml-1 h-3 w-3" /></Link>
             </Button>
@@ -141,10 +149,10 @@ export default function DashboardPage() {
               <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
             </div>
           ) : complaints?.length === 0 ? (
-            <div className="bg-white border rounded-xl p-12 text-center space-y-4">
-              <AlertCircle className="mx-auto h-12 w-12 text-slate-200" />
+            <div className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-xl p-12 text-center space-y-4">
+              <AlertCircle className="mx-auto h-12 w-12 text-slate-200 dark:text-slate-800" />
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-900">No reports found</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">No reports found</h3>
                 <p className="text-sm text-slate-500 max-w-sm mx-auto">Help improve your neighborhood by reporting infrastructure issues as you see them.</p>
               </div>
               <Button asChild variant="outline" size="sm">
@@ -166,15 +174,15 @@ export default function DashboardPage() {
 
 function StatCard({ label, value, icon, href }: any) {
   const cardContent = (
-    <Card className={`shadow-sm border border-slate-200 bg-white h-full ${href ? "hover:shadow-md hover:border-amber-500/50 transition-all cursor-pointer group/stat" : ""}`}>
+    <Card className={`shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 h-full ${href ? "hover:shadow-md hover:border-amber-500/50 transition-all cursor-pointer group/stat" : ""}`}>
       <CardContent className="p-6 flex items-center gap-4">
-        <div className="p-2 bg-slate-50 rounded-lg group-hover/stat:bg-amber-50 transition-colors">{icon}</div>
+        <div className="p-2 bg-slate-50 dark:bg-slate-950 rounded-lg group-hover/stat:bg-amber-50 transition-colors">{icon}</div>
         <div>
-          <p className="text-2xl font-headline font-bold text-slate-900 flex items-center gap-1">
+          <p className="text-2xl font-headline font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
             {value}
-            {href && <ArrowUpRight className="h-4 w-4 text-slate-400 group-hover/stat:text-amber-500 group-hover/stat:translate-x-0.5 group-hover/stat:-translate-y-0.5 transition-all" />}
+            {href && <ArrowUpRight className="h-4 w-4 text-slate-400 dark:text-slate-500 group-hover/stat:text-amber-500 group-hover/stat:translate-x-0.5 group-hover/stat:-translate-y-0.5 transition-all" />}
           </p>
-          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{label}</p>
+          <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-550 tracking-wider">{label}</p>
         </div>
       </CardContent>
     </Card>
@@ -192,9 +200,12 @@ function ComplaintCard({ complaint }: any) {
     "In Progress": "bg-blue-50 text-blue-600 border-blue-100",
     "Resolved": "bg-emerald-50 text-emerald-600 border-emerald-100",
   };
+  const locationAddress = typeof complaint.location === 'string'
+    ? complaint.location
+    : complaint.location?.address || 'Location provided';
 
   return (
-    <Card className="group overflow-hidden border border-slate-200 shadow-sm hover:border-primary/50 transition-all bg-white">
+    <Card className="group overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:border-primary/50 transition-all bg-white dark:bg-slate-900">
       {complaint.imageUrl && (
         <div className="h-40 w-full overflow-hidden border-b">
           <img src={complaint.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -207,11 +218,11 @@ function ComplaintCard({ complaint }: any) {
             {complaint.status || "Pending"}
           </div>
         </div>
-        <CardTitle className="text-base font-bold text-slate-900 line-clamp-1">{complaint.title}</CardTitle>
+        <CardTitle className="text-base font-bold text-slate-900 dark:text-slate-100 line-clamp-1">{complaint.title}</CardTitle>
       </CardHeader>
       <CardContent className="p-5 pt-0 space-y-4">
-        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-          <MapPin size={12} className="text-slate-400" /> {complaint.location?.address || 'Location provided'}
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <MapPin size={12} className="text-slate-400 dark:text-slate-500" /> {locationAddress}
         </div>
         <Button className="w-full h-9 text-xs" variant="secondary" asChild>
           <Link href={`/track/${complaint.id}`}>View Details</Link>

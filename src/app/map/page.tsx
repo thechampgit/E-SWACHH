@@ -52,7 +52,7 @@ export default function PublicMapPage() {
             <ArrowLeft size={20} />
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">eS</div>
+            <img src="/logo.png" alt="E-Swachh Logo" className="w-8 h-8 object-contain rounded-md" />
             <h1 className="text-xl font-headline font-bold text-slate-900 hidden sm:block">Impact Map</h1>
           </div>
         </div>

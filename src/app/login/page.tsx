@@ -24,7 +24,7 @@ export default function LoginPage() {
       {/* Centered Auth Card Scaffold with Suspense */}
       <div className="w-full max-w-lg my-12 z-10">
         <Suspense fallback={
-          <div className="w-full max-w-lg border border-slate-200/80 bg-white/95 backdrop-blur-md shadow-2xl p-12 text-center text-slate-600 font-sans font-bold">
+          <div className="w-full max-w-lg border border-slate-200/80 bg-black/95  shadow-2xl p-12 text-center text-black-600 font-sans font-bold">
             Loading security modules...
           </div>
         }>

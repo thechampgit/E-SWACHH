@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-slate-900">System Overview</h1>
-          <p className="text-muted-foreground">Welcome to the CIVICcare management dashboard.</p>
+          <p className="text-muted-foreground">Welcome to the E-Swacch management dashboard.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button asChild>

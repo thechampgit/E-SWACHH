@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { collection, query, where } from 'firebase/firestore';
 import { useFirestore, useCollection, useUser, useAuth, useMemoFirebase } from '@/firebase';
+import { useLogoutConfirm } from '@/context/LogoutConfirmContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -136,10 +137,14 @@ export default function RewardsPage() {
     return Math.max(0, userBasePoints - totalRedeemedCost);
   }, [userBasePoints, vouchers]);
 
+  const { confirmLogout } = useLogoutConfirm();
+
   const handleLogout = async () => {
-    if (!auth) return;
-    await signOut(auth);
-    router.push('/');
+    confirmLogout(async () => {
+      if (!auth) return;
+      await signOut(auth);
+      router.push('/');
+    });
   };
 
   const handleRedeemClick = (reward: typeof REWARDS_CATALOG[0]) => {
@@ -171,13 +176,16 @@ export default function RewardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col transition-colors duration-350">
+    <div 
+      className="min-h-screen flex flex-col transition-colors duration-350 bg-no-repeat bg-fixed"
+      style={{ backgroundImage: "url('/portal_bg.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
+    >
       {/* HEADER */}
       <header className="fixed top-0 z-[100] w-full border-b bg-white/95 backdrop-blur-md h-16">
         <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold">eS</div>
-            <span className="text-lg font-headline font-bold text-slate-900">e-Swachh</span>
+            <img src="/logo.png" alt="E-Swachh Logo" className="w-8 h-8 object-contain rounded-md" />
+            <span className="text-lg font-headline font-bold text-slate-900">E-Swachh</span>
           </Link>
           <div className="flex items-center gap-4">
             <NotificationCenter />
@@ -202,7 +210,7 @@ export default function RewardsPage() {
             <h1 className="text-2xl font-headline font-bold text-slate-900 flex items-center gap-2">
               Eco-Rewards Marketplace <Sparkles className="text-amber-500 h-5 w-5 animate-pulse" />
             </h1>
-            <p className="text-sm text-slate-500">Redeem points earned from reporting issues and helping keep the city clean for awesome, eco-friendly vouchers!</p>
+            <p className="text-sm text-slate-600">Redeem points earned from reporting issues and helping keep the city clean for awesome, eco-friendly vouchers!</p>
           </div>
           
           {/* PREMIUM BALANCE CARD */}
@@ -229,19 +237,19 @@ export default function RewardsPage() {
           <div className="flex gap-8">
             <Link 
               href="/dashboard" 
-              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-900 hover:border-slate-300 flex items-center gap-2 transition-all"
+              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:border-slate-400 flex items-center gap-2 transition-all"
             >
               <LayoutDashboard className="h-4 w-4" /> My Dashboard
             </Link>
             <Link 
               href="/dashboard/leaderboard" 
-              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-900 hover:border-slate-300 flex items-center gap-2 transition-all"
+              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:border-slate-400 flex items-center gap-2 transition-all"
             >
               <Trophy className="h-4 w-4" /> Swachh Warriors
             </Link>
             <Link 
               href="/dashboard/rewards" 
-              className="border-b-2 border-primary pb-3 text-sm font-bold text-primary flex items-center gap-2 transition-all"
+              className="border-b-2 border-cyan-600 pb-3 text-sm font-bold text-cyan-600 flex items-center gap-2 transition-all"
             >
               <Gift className="h-4 w-4" /> Eco Rewards
             </Link>

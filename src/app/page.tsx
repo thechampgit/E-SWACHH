@@ -1,7 +1,17 @@
 'use client';
 
 import Link from 'next/link';
+import { toast } from '@/hooks/use-toast';
+import { Linkedin, Instagram, Github, Mail } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useUser, useAuth } from '@/firebase';
+import { useLogoutConfirm } from '@/context/LogoutConfirmContext';
 import { signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
@@ -28,26 +38,40 @@ import {
   Sparkles,
   BookOpen,
   ArrowUpRight,
-  AlertTriangle
+  AlertTriangle,
+  Computer,
+  HandPlatter,
+  Recycle,
+  RecycleIcon,
+  HandPlatterIcon,
+  TimerIcon,
+  ComputerIcon,
+  BuildingIcon,
+  HandshakeIcon,
+  EarthLockIcon,
+  LeafIcon,
+  GlassesIcon,
+  GlassWaterIcon,
+  InstagramIcon
 } from 'lucide-react';
 
 const slides = [
   {
     title: "Smart Digital India",
     subtitle: "Pioneering futuristic municipal frameworks integrated with smart IoT grids and GIS mapping to accelerate modern urban administrative execution.",
-    image: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?q=80&w=1600&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?q=60&w=1200&auto=format&fit=crop&fm=webp",
     tag: "Digital India Initiative"
   },
   {
     title: "Cleaner Cities Through Technology",
     subtitle: "Synchronizing ward boundaries, automated AI dispatch routing, and real-time SLA metrics tracking to establish transparent city maintenance standards.",
-    image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1600&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=60&w=1200&auto=format&fit=crop&fm=webp",
     tag: "Municipal AI Automation"
   },
   {
     title: "Citizen-Powered Civic Reporting",
     subtitle: "Fostering strong citizen collaboration with local local zone commissioners through geo-spatial grievance filing and gamified community points.",
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1600&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=60&w=1200&auto=format&fit=crop&fm=webp",
     tag: "Democratic Neighborhood Watch"
   }
 ];
@@ -97,6 +121,48 @@ export default function LandingPage() {
   const { user } = useUser();
   const auth = useAuth();
   
+  const [showSplash, setShowSplash] = useState(false);
+
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+  const [emailSender, setEmailSender] = useState('');
+
+  useEffect(() => {
+    if (user?.email) {
+      setEmailSender(user.email);
+    }
+  }, [user]);
+
+  const handleEmailClick = () => {
+    setIsEmailDialogOpen(true);
+  };
+
+  const handleSendEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    const mailtoLink = `mailto:champgmail@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    window.location.href = mailtoLink;
+    toast({
+      title: "Email Client Opened",
+      description: "Redirecting to your email client to send the complaint to champgmail@gmail.com.",
+    });
+    setIsEmailDialogOpen(false);
+    setEmailSubject('');
+    setEmailBody('');
+  };
+
+  useEffect(() => {
+    const hasShownSplash = sessionStorage.getItem('eswachh_splash_shown');
+    if (!hasShownSplash) {
+      setShowSplash(true);
+      sessionStorage.setItem('eswachh_splash_shown', 'true');
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 2000); // 2 seconds load
+      return () => clearTimeout(timer);
+    }
+  }, []);
+  
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -115,8 +181,12 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
+  const { confirmLogout } = useLogoutConfirm();
+
   const handleLogout = async () => {
-    if (auth) await signOut(auth);
+    confirmLogout(async () => {
+      if (auth) await signOut(auth);
+    });
   };
 
   const nextSlide = () => {
@@ -129,6 +199,88 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-900 text-white cursor-pointer select-none"
+            onClick={() => setShowSplash(false)}
+            title="Click to skip"
+          >
+            {/* Background ambient light */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.08)_0%,transparent_70%)] pointer-events-none" />
+            
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center text-center px-6 relative z-10"
+            >
+              {/* Glowing ring around logo */}
+              <div className="relative mb-6">
+                <div className="absolute inset-0 rounded-full bg-cyan-500/25 blur-xl animate-pulse" />
+                <motion.img 
+                  src="/logo.png" 
+                  alt="E-Swachh Logo" 
+                  className="w-24 h-24 sm:w-28 sm:h-28 object-contain rounded-2xl relative z-10 shadow-2xl border border-white/10"
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ 
+                    duration: 2.0, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }}
+                />
+              </div>
+
+              {/* Title & Subtitle */}
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className="text-3xl sm:text-4xl font-headline font-extrabold tracking-wider bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2"
+              >
+                E-Swachh
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.6 }}
+                className="text-xs sm:text-sm uppercase tracking-widest text-slate-400 font-bold mb-8"
+              >
+                National Cleanliness Grid
+              </motion.p>
+
+              {/* Loading Indicator */}
+              <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden relative mb-4">
+                <motion.div 
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ 
+                    duration: 1.8, 
+                    ease: "easeInOut" 
+                  }}
+                  className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 absolute left-0 top-0 shadow-[0_0_8px_rgba(6,182,212,0.5)]"
+                />
+              </div>
+
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.6 }}
+                className="text-[10px] text-slate-500 tracking-wider mt-4 hover:text-slate-400 transition-colors"
+              >
+                Click anywhere to skip
+              </motion.span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* 1. STICKY GLASSMORPHIC NAVBAR */}
       <nav className={`fixed top-0 z-[100] w-full transition-all duration-300 ${
         isScrolled 
@@ -137,13 +289,15 @@ export default function LandingPage() {
       }`}>
         <div className="container mx-auto px-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded bg-cyan-600 flex items-center justify-center text-white font-bold transition-transform duration-300 group-hover:scale-105 group-hover:rotate-6">
-              eS
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="E-Swachh Logo" 
+              className="w-9 h-9 object-contain rounded-md transition-transform duration-300 group-hover:scale-105 group-hover:rotate-6"
+            />
             <span className={`text-xl font-headline font-extrabold tracking-wider transition-colors duration-300 ${
               isScrolled ? 'text-slate-900' : 'text-white'
             }`}>
-              e-Swachh
+              E-Swachh
             </span>
           </Link>
           
@@ -177,25 +331,14 @@ export default function LandingPage() {
                   }`}>
                     <Link href="/dashboard">Portal</Link>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleLogout} className={`font-semibold uppercase tracking-wider text-xs ${
-                    isScrolled 
-                      ? 'border-slate-200 text-slate-700 hover:bg-slate-50' 
-                      : 'border-white/20 text-white hover:bg-white/10'
-                  }`}>
+                  <Button size="sm" onClick={handleLogout} className="bg-[#0096c7] hover:bg-[#0077b6] text-white font-semibold uppercase tracking-wider text-xs px-4">
                     <LogOut className="mr-1.5 h-3.5 w-3.5" /> Logout
                   </Button>
                 </>
               ) : (
-                <>
-                  <Button variant="ghost" asChild className={`font-semibold uppercase tracking-wider text-xs ${
-                    isScrolled ? 'text-slate-700 hover:text-cyan-600' : 'text-slate-200 hover:text-white hover:bg-white/10'
-                  }`}>
-                    <Link href="/login">Login</Link>
-                  </Button>
-                  <Button asChild size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold uppercase tracking-wider text-xs px-4">
-                    <Link href="/signup">Sign Up</Link>
-                  </Button>
-                </>
+                <Button asChild size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold uppercase tracking-wider text-xs px-4">
+                  <Link href="/login">Login</Link>
+                </Button>
               )}
             </div>
           </div>
@@ -320,7 +463,7 @@ export default function LandingPage() {
               <div className="p-10 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col justify-between hover:bg-slate-50/50 transition-colors group">
                 <div>
                   <div className="w-10 h-10 bg-cyan-50 text-cyan-600 flex items-center justify-center mb-8">
-                    <ShieldCheck className="h-5 w-5" />
+                    <Computer className="h-5 w-5" />
                   </div>
                   <h3 className="text-xl font-headline font-bold mb-4 text-slate-900 tracking-tight">Verified Grievance Auditing</h3>
                   <p className="text-slate-500 text-sm leading-relaxed mb-6">Simulated AI validation categorizes, prioritizing issues instantly before routing tickets directly to municipal zones.</p>
@@ -333,7 +476,7 @@ export default function LandingPage() {
               <div className="p-10 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col justify-between hover:bg-slate-50/50 transition-colors group">
                 <div>
                   <div className="w-10 h-10 bg-cyan-50 text-cyan-600 flex items-center justify-center mb-8">
-                    <MapPin className="h-5 w-5" />
+                    <Recycle className="h-5 w-5" />
                   </div>
                   <h3 className="text-xl font-headline font-bold mb-4 text-slate-900 tracking-tight">Geo-Spatial Watch Tracking</h3>
                   <p className="text-slate-500 text-sm leading-relaxed mb-6">Interactive Leaflet mapping lets citizens pins coordinates and sync live browser geolocations transparently.</p>
@@ -346,7 +489,7 @@ export default function LandingPage() {
               <div className="p-10 flex flex-col justify-between hover:bg-slate-50/50 transition-colors group">
                 <div>
                   <div className="w-10 h-10 bg-cyan-50 text-cyan-600 flex items-center justify-center mb-8">
-                    <BarChart3 className="h-5 w-5" />
+                    <HandPlatter className="h-5 w-5" />
                   </div>
                   <h3 className="text-xl font-headline font-bold mb-4 text-slate-900 tracking-tight">Community Watch Upvoting</h3>
                   <p className="text-slate-500 text-sm leading-relaxed mb-6">Promote neighbor issues inside the dashboard. Highly supported concerns gain a dynamic Trending status priority.</p>
@@ -557,14 +700,32 @@ export default function LandingPage() {
               <span className="text-cyan-600 text-xs font-bold uppercase tracking-widest">Digital India Alignment</span>
               <h2 className="text-3xl font-headline font-bold text-slate-900 tracking-tight">Supported by the Smart Cities Mission</h2>
               <p className="text-slate-500 text-sm leading-relaxed max-w-xl mx-auto">
-                e-Swachh coordinates directly with national Urban Local Body (ULB) initiatives, building clean, safe, and transparent neighborhoods through modern information technology frameworks.
+                E-Swachh coordinates directly with national Urban Local Body (ULB) initiatives, building clean, safe, and transparent neighborhoods through modern information technology frameworks.
               </p>
               <div className="flex justify-content-center gap-6 pt-4 flex-wrap">
                 <div className="d-inline-flex align-items-center gap-2 text-xs uppercase tracking-wider font-bold text-slate-700">
                   <ShieldCheck size={16} className="text-cyan-600" /> SECURE DATA VAULT
                 </div>
                 <div className="d-inline-flex align-items-center gap-2 text-xs uppercase tracking-wider font-bold text-slate-700">
-                  <Globe size={16} className="text-cyan-600" /> 100% TRANSPARENT SLAS
+                  <GlassWaterIcon size={16} className="text-cyan-600" /> 100% TRANSPARENT TRACKING
+                </div>
+                 <div className="d-inline-flex align-items-center gap-2 text-xs uppercase tracking-wider font-bold text-slate-700">
+                  <TimerIcon size={16} className="text-cyan-600" /> REAL-TIME MONITORING
+                </div>
+                 <div className="d-inline-flex align-items-center gap-2 text-xs uppercase tracking-wider font-bold text-slate-700">
+                  <EarthLockIcon size={16} className="text-cyan-600" /> ECO-DRIVEN INNOVATION
+                </div>
+                 <div className="d-inline-flex align-items-center gap-2 text-xs uppercase tracking-wider font-bold text-slate-700">
+                  <BuildingIcon size={16} className="text-cyan-600" /> MUNICIPAL INTEGRATION
+                </div>
+                 <div className="d-inline-flex align-items-center gap-2 text-xs uppercase tracking-wider font-bold text-slate-700">
+                  <HandshakeIcon size={16} className="text-cyan-600" /> CITIZEN PARTICIPATION
+                </div>
+                 <div className="d-inline-flex align-items-center gap-2 text-xs uppercase tracking-wider font-bold text-slate-700">
+                  <LeafIcon size={16} className="text-cyan-600" /> CLEAN CITY INTELIGENCE
+                </div>
+                 <div className="d-inline-flex align-items-center gap-2 text-xs uppercase tracking-wider font-bold text-slate-700">
+                  <ComputerIcon size={16} className="text-cyan-600" /> DIGITAL INDIA READY
                 </div>
               </div>
             </div>
@@ -577,13 +738,13 @@ export default function LandingPage() {
             <div className="max-w-2xl mx-auto text-center mb-16">
               <span className="text-cyan-600 text-xs font-bold uppercase tracking-widest block mb-2.5">Help & FAQ Center</span>
               <h2 className="text-3xl lg:text-4xl font-headline font-bold text-slate-900 tracking-tight">Frequently Asked Questions</h2>
-              <p className="text-slate-500 text-sm max-w-md mx-auto mt-3">Find instant, professional answers to expected questions about the e-Swachh civic operations framework.</p>
+              <p className="text-slate-500 text-sm max-w-md mx-auto mt-3">Find instant, professional answers to expected questions about the   E-Swachh civic operations framework.</p>
             </div>
             
             <div className="max-w-3xl mx-auto space-y-4">
               <FaqItem 
-                question="How does e-Swachh validate reports?" 
-                answer="e-Swachh utilizes simulated AI validation frameworks to audit coordinates and sanitize incoming tickets. Upon validation, grievances are cataloged geo-spatially and instantly dispatched to the respective ward commissioner for targeted operational execution."
+                question="How does E-Swachh validate reports?" 
+                answer="E-Swachh utilizes simulated AI validation frameworks to audit coordinates and sanitize incoming tickets. Upon validation, grievances are cataloged geo-spatially and instantly dispatched to the respective ward commissioner for targeted operational execution."
               />
               <FaqItem 
                 question="What happens if a civic issue exceeds the specified SLA window?" 
@@ -610,28 +771,30 @@ export default function LandingPage() {
       {/* 8. SPACIOUS CHARCOAL MULTI-COLUMN FOOTER */}
       <footer className="bg-slate-950 text-white border-t border-slate-900 py-16 shrink-0 mt-auto">
         <div className="container mx-auto px-6">
-          <div className="row g-5 text-start">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 text-start">
             
             {/* Description Column */}
-            <div className="col-lg-5 col-md-12 space-y-5">
+            <div className="col-span-12 lg:col-span-4 space-y-5">
               <Link href="/" className="flex items-center gap-2.5 group">
-                <div className="w-8 h-8 rounded bg-cyan-600 flex items-center justify-center text-white font-bold transition-transform group-hover:scale-105">
-                  eS
-                </div>
+                <img 
+                  src="/logo.png" 
+                  alt="E-Swachh Logo" 
+                  className="w-8 h-8 object-contain rounded-md transition-transform group-hover:scale-105"
+                />
                 <span className="text-lg font-headline font-extrabold tracking-wider text-white">
-                  e-Swachh
+                  E-Swachh
                 </span>
               </Link>
-              <h6 className="text-xxs uppercase tracking-widest text-slate-400 font-weight-bold">National Cleanliness Grid</h6>
+              <h6 className="text-xxs uppercase tracking-widest text-cyan-400 font-bold border-bottom border-white/10 pb-2.5 inline-block w-75">National Cleanliness Grid</h6>
               <p className="text-slate-400 text-xs leading-relaxed max-w-sm">
-                e-Swachh is a futuristic civic intelligence platform designed under the Digital India mission to streamline city maintenance tracking and coordinate grievance ticketing transparently.
+                E-Swachh is a futuristic civic intelligence platform designed under the Digital India mission to streamline city maintenance tracking and coordinate grievance ticketing transparently.
               </p>
             </div>
 
             {/* Quick Links Column */}
-            <div className="col-sm-6 col-lg-3 space-y-4">
+            <div className="col-span-12 sm:col-span-6 lg:col-span-3 space-y-4">
               <h6 className="text-xxs uppercase tracking-widest text-cyan-400 font-bold border-bottom border-white/10 pb-2.5 inline-block w-75">Grievance Portal</h6>
-              <ul className="list-unstyled d-flex flex-column gap-2 text-xs">
+              <ul className="list-none p-0 flex flex-col gap-2.5 text-xs">
                 <li><Link href="/" className="text-slate-400 hover:text-white transition-colors text-decoration-none">Homepage</Link></li>
                 <li><Link href="/map" className="text-slate-400 hover:text-white transition-colors text-decoration-none">Live Heatmap Map</Link></li>
                 <li><Link href="/login" className="text-slate-400 hover:text-white transition-colors text-decoration-none font-weight-bold text-cyan-400">Portal Dashboard</Link></li>
@@ -640,32 +803,74 @@ export default function LandingPage() {
             </div>
 
             {/* Important Documentation Column */}
-            <div className="col-sm-6 col-lg-4 space-y-4">
+            <div className="col-span-12 sm:col-span-6 lg:col-span-3 space-y-4">
               <h6 className="text-xxs uppercase tracking-widest text-cyan-400 font-bold border-bottom border-white/10 pb-2.5 inline-block w-75">Resources & Hubs</h6>
-              <ul className="list-unstyled d-flex flex-column gap-2 text-xs">
-                <li className="d-flex align-items-center gap-1.5 text-slate-400">
+              <ul className="list-none p-0 flex flex-col gap-3 text-xs">
+                <li className="flex items-center gap-2 text-slate-400">
                   <BookOpen size={12} className="text-cyan-500" />
                   <Link href="#help" className="text-slate-400 hover:text-white transition-colors text-decoration-none">Help Center & FAQ Documentation</Link>
                 </li>
-                <li className="d-flex align-items-center gap-1.5 text-slate-400">
+                <li className="flex items-center gap-2 text-slate-400">
                   <Globe size={12} className="text-cyan-500" />
                   <span className="text-slate-400">Official Partner of Smart Cities Mission</span>
                 </li>
-                <li className="d-flex align-items-center gap-1.5 text-slate-400">
+                <li className="flex items-center gap-2 text-slate-400">
                   <ShieldCheck size={12} className="text-cyan-500" />
                   <span className="text-slate-400">Certified by Urban Development Administration</span>
                 </li>
               </ul>
             </div>
 
+            {/* Developer Socials & Contact Hub */}
+            <div className="col-span-12 sm:col-span-6 lg:col-span-2 space-y-4">
+              <h6 className="text-xxs uppercase tracking-widest text-cyan-400 font-bold border-bottom border-white/10 pb-2.5 inline-block w-75">Find us</h6>
+              <div className="flex items-center gap-4 pt-1">
+                <a 
+                  href="https://linkedin.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-slate-400 hover:text-white hover:scale-110 transition-all duration-200"
+                  title="LinkedIn Profile"
+                >
+                  <Linkedin size={20} />
+                </a>
+                <a 
+                  href="https://instagram.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-slate-400 hover:text-white hover:scale-110 transition-all duration-200"
+                  title="Instagram Feed"
+                >
+                  <Instagram size={20} />
+                </a>
+                <a 
+                  href="https://github.com/thechampgit/E-SWACHH" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-slate-400 hover:text-white hover:scale-110 transition-all duration-200"
+                  title="GitHub Code"
+                >
+                  <Github size={20} />
+                </a>
+                <button 
+                  onClick={handleEmailClick} 
+                  className="bg-transparent border-none p-0 text-slate-400 hover:text-white hover:scale-110 transition-all duration-200 cursor-pointer"
+                  title="Contact Us"
+                >
+                  <Mail size={20} />
+                </button>
+              </div>
+            </div>
+
           </div>
 
           {/* Copyright Band */}
-          <div className="border-top border-white/10 mt-12 pt-6 d-flex flex-column flex-sm-row justify-content-between align-items-center text-xxs text-slate-500 gap-3">
+          <div className="border-t border-white/10 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center text-[10px] text-slate-500 gap-4">
             <p className="mb-0 tracking-wider">
-              Copyright © 2026 | e-Swachh Grid Admin All Rights Reserved | Built for Digital India and Modern Urban Management
+              Copyright © 2026 | E-Swachh Grid Admin All Rights Reserved | Built for Digital India and Modern Urban Management 
             </p>
-            <div className="d-flex gap-4">
+             
+            <div className="flex gap-4">
               <span className="text-slate-600 hover:text-slate-400 cursor-pointer">Security Policy</span>
               <span className="text-slate-600 hover:text-slate-400 cursor-pointer">Privacy Guidelines</span>
               <span className="text-slate-600 hover:text-slate-400 cursor-pointer">API Agreement</span>
@@ -674,6 +879,82 @@ export default function LandingPage() {
 
         </div>
       </footer>
+
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent className="sm:max-w-[450px] rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 z-[200]">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="text-xl font-headline font-bold text-slate-900 dark:text-slate-100">
+              Send Email / Complaint
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+              Submit your queries or complaints directly to the developer at <strong className="text-cyan-600 dark:text-cyan-400 font-semibold">champgmail@gmail.com</strong>
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSendEmail} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <label htmlFor="email-sender" className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350">
+                Your Email Address
+              </label>
+              <input 
+                id="email-sender"
+                type="email"
+                placeholder="you@example.com"
+                value={emailSender}
+                onChange={(e) => setEmailSender(e.target.value)}
+                required
+                className="w-full h-11 px-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:border-transparent rounded-lg"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="email-subject" className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350">
+                Subject
+              </label>
+              <input 
+                id="email-subject"
+                type="text"
+                placeholder="e.g. Garbage collection delay in ward 4"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                required
+                className="w-full h-11 px-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:border-transparent rounded-lg"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="email-body" className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350">
+                Message / Complaint Details
+              </label>
+              <textarea 
+                id="email-body"
+                placeholder="Describe your issue or write your email message here..."
+                value={emailBody}
+                onChange={(e) => setEmailBody(e.target.value)}
+                required
+                rows={4}
+                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:border-transparent rounded-lg resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button 
+                type="button" 
+                onClick={() => setIsEmailDialogOpen(false)}
+                className="h-10 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit"
+                className="h-10 px-4 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-lg shadow-sm transition-colors"
+              >
+                Send Email
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

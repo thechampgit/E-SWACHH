@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   DocumentReference, 
   onSnapshot, 
   DocumentData, 
   DocumentSnapshot,
-  FirestoreError 
+  FirestoreError,
+  refEqual
 } from 'firebase/firestore';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError, SecurityRuleContext } from '../errors';
@@ -16,8 +17,19 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
+  // Stabilize the docRef reference
+  const docRefRef = useRef<DocumentReference<T> | null>(null);
+
+  if (docRef === null) {
+    docRefRef.current = null;
+  } else if (docRefRef.current === null || !refEqual(docRefRef.current, docRef)) {
+    docRefRef.current = docRef;
+  }
+
+  const stableDocRef = docRefRef.current;
+
   useEffect(() => {
-    if (!docRef) {
+    if (!stableDocRef) {
       setLoading(false);
       setData(null);
       return;
@@ -25,16 +37,16 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
 
     setLoading(true);
     const unsubscribe = onSnapshot(
-      docRef,
+      stableDocRef,
       (snapshot: DocumentSnapshot<T>) => {
         setData(snapshot.exists() ? { ...snapshot.data()!, id: snapshot.id } : null);
         setLoading(false);
       },
       (err: FirestoreError) => {
-        console.error(`Firestore useDoc Error [${docRef.path}]:`, err);
+        console.error(`Firestore useDoc Error [${stableDocRef.path}]:`, err);
         if (err.code === 'permission-denied') {
           const permissionError = new FirestorePermissionError({
-            path: docRef.path,
+            path: stableDocRef.path,
             operation: 'get',
           } satisfies SecurityRuleContext);
           errorEmitter.emit('permission-error', permissionError);
@@ -45,7 +57,7 @@ export function useDoc<T = DocumentData>(docRef: DocumentReference<T> | null) {
     );
 
     return () => unsubscribe();
-  }, [docRef]);
+  }, [stableDocRef]);
 
   return { data, loading, error };
 }

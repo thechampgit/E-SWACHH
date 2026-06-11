@@ -2,14 +2,14 @@
 
 /**
  * Firebase configuration object.
- * Hardcoded with the project credentials provided to ensure immediate connectivity.
+ * Hardcoded with the correct E-Swachh project credentials as fallback.
  */
 export const firebaseConfig = {
-  apiKey: "AIzaSyAG3D6ALR5BbhTwJLWO6NmKgxiHIFDhJfo",
-  authDomain: "studio-3092936231-e4dc8.firebaseapp.com",
-  projectId: "studio-3092936231-e4dc8",
-  storageBucket: "studio-3092936231-e4dc8.firebasestorage.app",
-  messagingSenderId: "238649568344",
-  appId: "1:238649568344:web:0d0a138c71121308412e2d",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDXyVMqE7MeQIHPPWNkXQFVwMg46WJEsXs",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "e-swachh-15ce7.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "e-swachh-15ce7",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "e-swachh-15ce7.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "936401481375",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:936401481375:web:8f35b9a8ae79030ae37caa",
   vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || ""
 };

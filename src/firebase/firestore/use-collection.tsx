@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Query, 
   onSnapshot, 
   DocumentData, 
   QuerySnapshot,
-  FirestoreError 
+  FirestoreError,
+  queryEqual
 } from 'firebase/firestore';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError, SecurityRuleContext } from '../errors';
@@ -16,8 +17,19 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FirestoreError | null>(null);
 
+  // Stabilize the query reference
+  const queryRef = useRef<Query<T> | null>(null);
+
+  if (query === null) {
+    queryRef.current = null;
+  } else if (queryRef.current === null || !queryEqual(queryRef.current, query)) {
+    queryRef.current = query;
+  }
+
+  const stableQuery = queryRef.current;
+
   useEffect(() => {
-    if (!query) {
+    if (!stableQuery) {
       setLoading(false);
       setData([]);
       return;
@@ -25,7 +37,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
 
     setLoading(true);
     const unsubscribe = onSnapshot(
-      query,
+      stableQuery,
       (snapshot: QuerySnapshot<T>) => {
         const items = snapshot.docs.map((doc) => ({
           ...doc.data(),
@@ -49,7 +61,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
     );
 
     return () => unsubscribe();
-  }, [query]);
+  }, [stableQuery]);
 
   return { data, loading, error };
 }

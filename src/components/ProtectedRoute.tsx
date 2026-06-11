@@ -43,11 +43,14 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     if (!loading) {
       if (!user) {
         router.push('/login');
-      } else if (requiredRole && userData && userData.role !== requiredRole) {
-        if (userData.role === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/dashboard');
+      } else {
+        const userRole = userData?.role || 'citizen';
+        if (requiredRole && userRole !== requiredRole) {
+          if (userRole === 'admin') {
+            router.push('/admin');
+          } else {
+            router.push('/dashboard');
+          }
         }
       }
     }
@@ -77,7 +80,9 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  if (!user || (requiredRole && userData?.role !== requiredRole)) {
+  const userRole = userData?.role || 'citizen';
+
+  if (!user || (requiredRole && userRole !== requiredRole)) {
     return null;
   }
 

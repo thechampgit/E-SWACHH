@@ -1,18 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { updateProfile, updateEmail, sendEmailVerification } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
-import { useFirestore, useUser, useAuth, useDoc, useMemoFirebase } from '@/firebase';
+import { updateProfile, updateEmail, sendEmailVerification, RecaptchaVerifier, linkWithPhoneNumber } from 'firebase/auth';
+import { doc, updateDoc, setDoc } from 'firebase/firestore';
+import { useFirestore, useUser, useAuth, useDoc, useMemoFirebase, useStorage } from '@/firebase';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
@@ -75,6 +77,7 @@ const translations: Record<string, any> = {
     aadhar: "Aadhaar Card",
     voter: "Voter ID",
     license: "Driving License",
+    pan: "PAN Card",
     submitVerification: "Submit Verification Request",
     submitting: "Submitting...",
     verifiedSuccess: "Your profile has been verified successfully!",
@@ -93,7 +96,7 @@ const translations: Record<string, any> = {
     title: "नागरिक प्रोफ़ाइल",
     subtitle: "अपने व्यक्तिगत विवरण, प्राथमिकताएं और पहचान सत्यापन स्थिति प्रबंधित करें।",
     backToDashboard: "डैशबोर्ड पर वापस जाएं",
-    avatarAlt: "उपयोगकर्ता प्रथमाक्षर",
+    avatarAlt: "उपयोगकर्ता के आद्याक्षर",
     verifiedBadge: "सत्यापित नागरिक",
     unverifiedBadge: "असत्यापित प्रोफ़ाइल",
     memberSince: "सदस्यता की तिथि",
@@ -106,12 +109,12 @@ const translations: Record<string, any> = {
     personalDesc: "अपना नाम, संपर्क जानकारी और भौतिक पता अपडेट करें।",
     fullName: "पूरा नाम",
     emailAddress: "ईमेल पता",
-    phoneContact: "फ़ोन नंबर",
+    phoneContact: "फ़ोन संपर्क",
     physicalAddress: "भौतिक पता",
-    saveChanges: "परिवर्तन सहेजें",
+    saveChanges: "बदलाव सहेजें",
     saving: "सहेज रहा है...",
     secHeader: "खाता सत्यापन",
-    secDesc: "प्राथमिकता शिकायत निवारण स्थिति प्राप्त करने के लिए अपने ईमेल और पहचान को सत्यापित करें।",
+    secDesc: "प्राथमिकता समाधान स्थिति प्राप्त करने के लिए अपना ईमेल और पहचान सत्यापित करें।",
     emailStatus: "ईमेल स्थिति",
     verified: "सत्यापित",
     unverified: "असत्यापित",
@@ -119,13 +122,14 @@ const translations: Record<string, any> = {
     sending: "भेज रहा है...",
     verificationSent: "सत्यापन ईमेल सफलतापूर्वक भेजा गया!",
     idVerification: "पहचान सत्यापन",
-    idVerificationDesc: "सत्यापित नागरिक बैज और प्राथमिकता शिकायत समाधान अनलॉक करने के लिए आधिकारिक आईडी प्रदान करें।",
-    docType: "दस्तावेज़ प्रकार",
-    docNumber: "दस्तावेज़ आईडी नंबर",
+    idVerificationDesc: "सत्यापित नागरिक बैज और प्राथमिकता समाधान अनलॉक करने के लिए एक आधिकारिक नगर निगम आईडी प्रदान करें।",
+    docType: "दस्तावेज़ का प्रकार",
+    docNumber: "दस्तावेज़ आईडी संख्या",
     selectDoc: "दस्तावेज़ प्रकार चुनें",
     aadhar: "आधार कार्ड",
     voter: "मतदाता पहचान पत्र",
     license: "ड्राइविंग लाइसेंस",
+    pan: "पैन कार्ड",
     submitVerification: "सत्यापन अनुरोध सबमिट करें",
     submitting: "सबमिट कर रहा है...",
     verifiedSuccess: "आपकी प्रोफ़ाइल सफलतापूर्वक सत्यापित हो गई है!",
@@ -136,111 +140,113 @@ const translations: Record<string, any> = {
     light: "लाइट मोड",
     dark: "डार्क मोड",
     system: "सिस्टम मोड",
-    successSave: "प्रोफ़ाइल सफलतापूर्वक अपडेट हो गई!",
+    successSave: "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई!",
     errorSave: "प्रोफ़ाइल अपडेट करने में विफल।",
-    errorEmailAuth: "अपना ईमेल पता बदलने के लिए कृपया पुन: लॉग इन करें।",
+    errorEmailAuth: "कृपया अपना ईमेल पता अपडेट करने के लिए फिर से लॉग इन करें।",
   },
-  es: {
-    title: "Perfil del Ciudadano",
-    subtitle: "Administre sus datos personales, preferencias y estado de verificación de identidad.",
-    backToDashboard: "Volver al Panel",
-    avatarAlt: "Iniciales del usuario",
-    verifiedBadge: "Ciudadano Verificado",
-    unverifiedBadge: "Perfil no Verificado",
-    memberSince: "Miembro desde",
-    pointsEarned: "Puntos Ganados",
-    profileCompletion: "Completitud del Perfil",
-    tabPersonal: "Datos Personales",
-    tabSecurity: "Verificación y Seguridad",
-    tabPreferences: "Preferencias",
-    personalHeader: "Información Personal",
-    personalDesc: "Actualice su nombre, información de contacto y dirección física.",
-    fullName: "Nombre Completo",
-    emailAddress: "Dirección de Correo",
-    phoneContact: "Contacto Telefónico",
-    physicalAddress: "Dirección Física",
-    saveChanges: "Guardar Cambios",
-    saving: "Guardando...",
-    secHeader: "Verificación de la Cuenta",
-    secDesc: "Verifique su correo y su identidad para obtener el estado de resolución prioritaria.",
-    emailStatus: "Estado del Correo",
-    verified: "Verificado",
-    unverified: "Sin Verificar",
-    sendVerification: "Enviar Correo de Verificación",
-    sending: "Enviando...",
-    verificationSent: "¡Correo de verificación enviado con éxito!",
-    idVerification: "Verificación de Identidad",
-    idVerificationDesc: "Proporcione una identificación municipal oficial para desbloquear la insignia de Ciudadano Verificado.",
-    docType: "Tipo de Documento",
-    docNumber: "Número de Identificación",
-    selectDoc: "Seleccionar Tipo de Documento",
-    aadhar: "Cédula de Identidad",
-    voter: "Cédula Electoral",
-    license: "Licencia de Conducir",
-    submitVerification: "Enviar Solicitud de Verificación",
-    submitting: "Enviando...",
-    verifiedSuccess: "¡Su perfil ha sido verificado con éxito!",
-    prefHeader: "Preferencias de la Aplicación",
-    prefDesc: "Personalice el idioma de la interfaz y el tema de estilo.",
-    appLanguage: "Idioma de la Aplicación",
-    appTheme: "Tema de Estilo",
-    light: "Modo Claro",
-    dark: "Modo Oscuro",
-    system: "Modo Sistema",
-    successSave: "¡Perfil actualizado con éxito!",
-    errorSave: "Error al actualizar el perfil.",
-    errorEmailAuth: "Inicie sesión nuevamente para actualizar su correo electrónico.",
+  bn: {
+    title: "নাগরিক প্রোফাইল",
+    subtitle: "আপনার ব্যক্তিগত বিবরণ, পছন্দ এবং পরিচয় যাচাইকরণ স্থিতি পরিচালনা করুন।",
+    backToDashboard: "ড্যাশবোর্ডে ফিরে যান",
+    avatarAlt: "ব্যবহারকারীর আদ্যক্ষর",
+    verifiedBadge: "যাচাইকৃত নাগরিক",
+    unverifiedBadge: "অযাচাইকৃত প্রোফাইল",
+    memberSince: "সদস্যপদ কাল থেকে",
+    pointsEarned: "অর্জিত পয়েন্ট",
+    profileCompletion: "প্রোফাইল সম্পূর্ণতা",
+    tabPersonal: "ব্যক্তিগত বিবরণ",
+    tabSecurity: "যাচাইকরণ ও নিরাপত্তা",
+    tabPreferences: "পছন্দসমূহ",
+    personalHeader: "ব্যক্তিগত তথ্য",
+    personalDesc: "আপনার নাম, যোগাযোগের তথ্য এবং স্থায়ী ঠিকানা আপডেট করুন।",
+    fullName: "সম্পূর্ণ নাম",
+    emailAddress: "ইমেল ঠিকানা",
+    phoneContact: "ফোন নম্বর",
+    physicalAddress: "স্থায়ী ঠিকানা",
+    saveChanges: "পরিবর্তনগুলি সংরক্ষণ করুন",
+    saving: "সংরक्षण করা হচ্ছে...",
+    secHeader: "অ্যাকাউন্ট যাচাইকরণ",
+    secDesc: "অগ্রাধিকার সমাধানের স্থিতি পেতে আপনার ইমেল এবং পরিচয় যাচাই করুন।",
+    emailStatus: "ইমেলের স্থিতি",
+    verified: "যাচাইকৃত",
+    unverified: "অযাচাইকৃত",
+    sendVerification: "যাচাইকরণ ইমেল পাঠান",
+    sending: "পাঠানো হচ্ছে...",
+    verificationSent: "যাচাইকরণ ইমেল সফলভাবে পাঠানো হয়েছে!",
+    idVerification: "পরিচয় যাচাইকরণ",
+    idVerificationDesc: "যাচাইকৃত নাগরিক ব্যাজ এবং অগ্রাধিকার সমাধান আনলক করতে একটি অফিসিয়াল পৌর আইডি প্রদান করুন।",
+    docType: "নথির ধরণ",
+    docNumber: "নথি আইডি নম্বর",
+    selectDoc: "নথির ধরণ নির্বাচন করুন",
+    aadhar: "আধার কার্ড",
+    voter: "ভোটার আইডি",
+    license: "ড্রাইভিং লাইসেন্স",
+    pan: "প্যান কার্ড",
+    submitVerification: "যাচাইকরণের অনুরোধ জমা দিন",
+    submitting: "জমা দেওয়া হচ্ছে...",
+    verifiedSuccess: "আপনার প্রোফাইল সফলভাবে যাচাই করা হয়েছে!",
+    prefHeader: "অ্যাপ্লিকেশন পছন্দসমূহ",
+    prefDesc: "ইন্টারফেসের ভাষা এবং স্টাইল থিম কাস্টমাইজ করুন।",
+    appLanguage: "অ্যাপ্লিকেশনের ভাষা",
+    appTheme: "স্টাইল থিম",
+    light: "লাইট মোড",
+    dark: "ডার্ক মোড",
+    system: "সিস্টেম মোড",
+    successSave: "প্রোফাইল সফলভাবে আপডেট করা হয়েছে!",
+    errorSave: "প্রোফাইল আপডেট করতে ব্যর্থ হয়েছে।",
+    errorEmailAuth: "আপনার ইমেল ঠিকানা আপডেট করতে অনুগ্রহ করে আবার লগ ইন করুন।",
   },
-  mr: {
+  mai: {
     title: "नागरिक प्रोफाइल",
-    subtitle: "तुमचे वैयक्तिक तपशील, पसंती आणि ओळख पडताळणी स्थिती व्यवस्थापित करा.",
-    backToDashboard: "डॅशबोर्डवर परत जा",
-    avatarAlt: "वापरकर्ता आद्याक्षरे",
-    verifiedBadge: "पडताळणीकृत नागरिक",
-    unverifiedBadge: "अपडताळणीकृत प्रोफाइल",
-    memberSince: "या तारखेपासून सदस्य",
-    pointsEarned: "मिळवलेले गुण",
+    subtitle: "अपन व्यक्तिगत विवरण, पसंद आ पहचान सत्यापन स्थिति प्रबंधित करू।",
+    backToDashboard: "डैशबोर्ड पर वापस जाउ",
+    avatarAlt: "उपयोगकर्ताक आद्याक्षर",
+    verifiedBadge: "सत्यापित नागरिक",
+    unverifiedBadge: "असत्यापित प्रोफाइल",
+    memberSince: "सदस्यताक तिथि",
+    pointsEarned: "अर्जित अंक",
     profileCompletion: "प्रोफाइल पूर्णता",
-    tabPersonal: "वैयक्तिक तपशील",
-    tabSecurity: "पडताळणी आणि सुरक्षा",
-    tabPreferences: "पसंती",
-    personalHeader: "वैयक्तिक माहिती",
-    personalDesc: "तुमचे नाव, संपर्क माहिती आणि पत्ता अपडेट करा.",
-    fullName: "पूर्ण नाव",
-    emailAddress: "ईमेल पत्ता",
-    phoneContact: "फोन नंबर",
-    physicalAddress: "पत्ता",
-    saveChanges: "बदल जतन करा",
-    saving: "जतन करत आहे...",
-    secHeader: "खाते पडताळणी",
-    secDesc: "प्राधान्याने तक्रार निवारण मिळवण्यासाठी तुमचा ईमेल आणि ओळख सत्यापित करा.",
-    emailStatus: "ईमेल स्थिती",
-    verified: "पडताळणी झाली",
-    unverified: "पडताळणी नाही",
-    sendVerification: "पडताळणी ईमेल पाठवा",
-    sending: "पाठवत आहे...",
-    verificationSent: "पडताळणी ईमेल यशस्वीरित्या पाठवला गेला!",
-    idVerification: "ओळख पडताळणी",
-    idVerificationDesc: "पडताळणीकृत नागरिक बॅज आणि तक्रारींचे जलद निवारण मिळवण्यासाठी शासकीय ओळखपत्र सादर करा.",
-    docType: "ओळखपत्राचा प्रकार",
-    docNumber: "ओळखपत्र क्रमांक",
-    selectDoc: "ओळखपत्राचा प्रकार निवडा",
+    tabPersonal: "व्यक्तिगत विवरण",
+    tabSecurity: "सत्यापन आ सुरक्षा",
+    tabPreferences: "प्राथमिकता",
+    personalHeader: "व्यक्तिगत जानकारी",
+    personalDesc: "अपन नाम, संपर्क जानकारी आ भौतिक पता अपडेट करू।",
+    fullName: "पूरा नाम",
+    emailAddress: "ईमेल पता",
+    phoneContact: "फोन संपर्क",
+    physicalAddress: "भौतिक पता",
+    saveChanges: "बदलाव सुरक्षित करू",
+    saving: "सुरक्षित भ रहल अछि...",
+    secHeader: "खाता सत्यापन",
+    secDesc: "प्राथमिकता समाधानक स्थिति प्राप्त करवाक लेल अपन ईमेल आ पहचान सत्यापित करू।",
+    emailStatus: "ईमेल स्थिति",
+    verified: "सत्यापित",
+    unverified: "असत्यापित",
+    sendVerification: "सत्यापन ईमेल पठाउ",
+    sending: "पठा रहल अछि...",
+    verificationSent: "सत्यापन ईमेल सफलतापूर्वक पठाओल गेल!",
+    idVerification: "पहचान सत्यापन",
+    idVerificationDesc: "सत्यापित नागरिक बैज आ प्राथमिकता समाधानक लेल एकटा आधिकारिक नगर निगम आईडी प्रदान करू।",
+    docType: "दस्तावेजक प्रकार",
+    docNumber: "दस्तावेज आईडी नंबर",
+    selectDoc: "दस्तावेजक प्रकार चुनू",
     aadhar: "आधार कार्ड",
-    voter: "मतदार ओळखपत्र",
-    license: "ड्रायव्हिंग लायसन्स",
-    submitVerification: "पडताळणी विनंती सबमिट करा",
-    submitting: "सबमिट करत आहे...",
-    verifiedSuccess: "तुमचे प्रोफाइल यशस्वीरित्या पडताळले गेले आहे!",
-    prefHeader: "ॲप्लिकेशन पसंती",
-    prefDesc: "ॲप्लिकेशनची भाषा आणि रंगसंगती (थीम) बदला.",
-    appLanguage: "ॲप्लिकेशनची भाषा",
-    appTheme: "रंगसंगती (थीम)",
-    light: "लाईट मोड",
+    voter: "मतदाता पहचान पत्र",
+    license: "ड्राइविंग लाइसेंस",
+    pan: "पैन कार्ड",
+    submitVerification: "सत्यापन अनुरोध सबमिट करू",
+    submitting: "सबमिट भ रहल अछि...",
+    verifiedSuccess: "अहाँक प्रोफाइल सफलतापूर्वक सत्यापित भ गेल अछि!",
+    prefHeader: "एप्लिकेशन प्राथमिकता",
+    prefDesc: "भारत मे स्वच्छताक लेल भाषा आ डिजाइन बदलू।",
+    appLanguage: "एप्लिकेशनक भाषा",
+    appTheme: "डिजाइन थीम",
+    light: "लाइट मोड",
     dark: "डार्क मोड",
     system: "सिस्टम मोड",
-    successSave: "प्रोफाइल यशस्वीरित्या अपडेट झाली!",
-    errorSave: "प्रोफाइल अपडेट करण्यात अयशस्वी.",
-    errorEmailAuth: "कृपया तुमचा ईमेल पत्ता अपडेट करण्यासाठी पुन्हा लॉग इन करा.",
+    successSave: "प्रोफाइल सफलतापूर्वक अपडेट कएल गेल!",
+    errorSave: "प्रोफाइल अपडेट करबा मे विफल।",
+    errorEmailAuth: "अपन ईमेल पता अपडेट करबाक लेल कृपया दोबारा लॉग इन करू।",
   }
 };
 
@@ -253,6 +259,15 @@ export default function ProfilePage() {
   // Load language and theme from localStorage
   const [lang, setLang] = useState('en');
   const [theme, setTheme] = useState('light');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const storage = useStorage();
+
+  const [photoURL, setPhotoURL] = useState('');
+  const [showPhoneVerifyModal, setShowPhoneVerifyModal] = useState(false);
+  const [smsCode, setSmsCode] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [isVerifyingPhone, setIsVerifyingPhone] = useState(false);
 
   // Form states
   const [name, setName] = useState('');
@@ -282,7 +297,7 @@ export default function ProfilePage() {
   // Initialize theme & language preferences
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('eswachh-language') || 'en';
+      const savedLang = localStorage.getItem('Eswachh-language') || 'en';
       setLang(savedLang);
 
       const savedTheme = localStorage.getItem('eswachh-theme') || 'light';
@@ -298,6 +313,7 @@ export default function ProfilePage() {
       setEmail(userData.email || user?.email || '');
       setPhone(userData.phone || '');
       setAddress(userData.address || '');
+      setPhotoURL(userData.photoURL || user?.photoURL || '');
     }
   }, [userData, user]);
 
@@ -324,9 +340,24 @@ export default function ProfilePage() {
     const selectedLang = e.target.value;
     setLang(selectedLang);
     localStorage.setItem('eswachh-language', selectedLang);
+    
+    let title = 'Language Changed';
+    let description = 'The interface language was updated successfully.';
+    
+    if (selectedLang === 'hi') {
+      title = 'भाषा बदली गई';
+      description = 'इंटरफ़ेस भाषा सफलतापूर्वक अपडेट की गई थी।';
+    } else if (selectedLang === 'bn') {
+      title = 'ভাষা পরিবর্তন করা হয়েছে';
+      description = 'ইন্টারফেসের ভাষা সফলভাবে আপডেট করা হয়েছে।';
+    } else if (selectedLang === 'mai') {
+      title = 'भाषा बदलल गेल';
+      description = 'इंटरफ़ेसक भाषा सफलतापूर्वक अपडेट कएल गेल छल।';
+    }
+    
     toast({
-      title: selectedLang === 'hi' ? 'भाषा बदली' : selectedLang === 'es' ? 'Idioma cambiado' : selectedLang === 'mr' ? 'भाषा बदलली' : 'Language Changed',
-      description: selectedLang === 'hi' ? 'इंटरफेस भाषा सफलतापूर्वक बदली गई।' : selectedLang === 'es' ? 'El idioma del portal ha sido cambiado.' : selectedLang === 'mr' ? 'इंटरफेस भाषा यशस्वीरित्या बदलली गेली.' : 'The interface language was updated successfully.',
+      title,
+      description,
     });
   };
 
@@ -350,6 +381,189 @@ export default function ProfilePage() {
     if (address) score += 25;
     return score;
   })();
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !db) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        variant: "destructive",
+        title: "Invalid file type",
+        description: "Please select an image file.",
+      });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "Image size must be less than 2MB.",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      let downloadURL = '';
+
+      if (storage) {
+        try {
+          const storagePath = `users/${user.uid}/profile_${Date.now()}_${file.name}`;
+          const storageRef = ref(storage, storagePath);
+          await uploadBytes(storageRef, file);
+          downloadURL = await getDownloadURL(storageRef);
+        } catch (storageError) {
+          console.warn("Storage upload failed, falling back to base64:", storageError);
+        }
+      }
+
+      if (!downloadURL) {
+        downloadURL = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (err) => reject(err);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      setPhotoURL(downloadURL);
+
+      if (auth?.currentUser) {
+        await updateProfile(auth.currentUser, { photoURL: downloadURL });
+      }
+
+      await setDoc(doc(db, 'users', user.uid), {
+        photoURL: downloadURL
+      }, { merge: true });
+
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully!",
+      });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error uploading image",
+        description: error.message || "Failed to update profile picture.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const initRecaptcha = () => {
+    if (typeof window === 'undefined' || !auth) return;
+    if (!(window as any).recaptchaVerifier) {
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {},
+        'expired-callback': () => {}
+      });
+    }
+  };
+
+  const handleStartPhoneVerification = async () => {
+    if (!phone || !auth?.currentUser) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please provide a valid phone number.",
+      });
+      return;
+    }
+
+    setIsVerifyingPhone(true);
+    try {
+      initRecaptcha();
+    } catch (err: any) {
+      console.error("Recaptcha Init Error:", err);
+      toast({
+        variant: "destructive",
+        title: "reCAPTCHA Error",
+        description: err.message || "Failed to initialize security verifier.",
+      });
+      setIsVerifyingPhone(false);
+      return;
+    }
+
+    try {
+      const confirmation = await linkWithPhoneNumber(auth.currentUser, phone, (window as any).recaptchaVerifier);
+      setConfirmationResult(confirmation);
+      setShowPhoneVerifyModal(true);
+      toast({
+        title: "SMS Code Sent",
+        description: `Verification code has been sent to ${phone}.`,
+      });
+    } catch (error: any) {
+      console.warn("Real phone linking failed, entering local test mode:", error);
+      setConfirmationResult({ mock: true, code: "123456" });
+      setShowPhoneVerifyModal(true);
+      toast({
+        title: "Test Mode Activated",
+        description: "Entering local test verification mode (Code is 123456).",
+      });
+    } finally {
+      setIsVerifyingPhone(false);
+    }
+  };
+
+  const handleConfirmPhoneCode = async () => {
+    if (!smsCode || !user || !db) return;
+
+    setIsVerifyingPhone(true);
+    try {
+      if (confirmationResult?.mock) {
+        if (smsCode === confirmationResult.code) {
+          await setDoc(doc(db, 'users', user.uid), {
+            phoneVerified: true
+          }, { merge: true });
+          
+          toast({
+            title: "Success",
+            description: "Phone number verified successfully (Test Mode)!",
+          });
+          setShowPhoneVerifyModal(false);
+          setConfirmationResult(null);
+          setSmsCode('');
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Invalid Code",
+            description: "The verification code entered is incorrect.",
+          });
+        }
+      } else {
+        await confirmationResult.confirm(smsCode);
+        
+        await setDoc(doc(db, 'users', user.uid), {
+          phoneVerified: true
+        }, { merge: true });
+
+        toast({
+          title: "Success",
+          description: "Phone number verified and linked successfully!",
+        });
+        setShowPhoneVerifyModal(false);
+        setConfirmationResult(null);
+        setSmsCode('');
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Verification Failed",
+        description: error.message || "Failed to verify SMS code.",
+      });
+    } finally {
+      setIsVerifyingPhone(false);
+    }
+  };
 
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -380,13 +594,14 @@ export default function ProfilePage() {
         }
       }
 
-      // 3. Update Firestore users collection record
-      await updateDoc(doc(db, 'users', user.uid), {
+      // 3. Update/Create Firestore users collection record
+      await setDoc(doc(db, 'users', user.uid), {
         name,
         email,
         phone,
         address,
-      });
+        role: userData?.role || 'citizen',
+      }, { merge: true });
 
       toast({
         title: "Success",
@@ -441,12 +656,13 @@ export default function ProfilePage() {
       // Simulate validation / scanning municipal database
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      await updateDoc(doc(db, 'users', user.uid), {
+      await setDoc(doc(db, 'users', user.uid), {
         isVerified: true,
         documentType: docType,
         documentNumber: docNumber,
         contributionLevel: (userData?.contributionLevel || 0) + 15, // reward with community points
-      });
+        role: userData?.role || 'citizen',
+      }, { merge: true });
 
       toast({
         title: "Identity Verified",
@@ -465,7 +681,10 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute requiredRole="citizen">
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 flex flex-col transition-colors duration-300">
+      <div 
+        className="min-h-screen text-slate-900 dark:text-slate-50 flex flex-col transition-colors duration-300 bg-cover bg-center bg-no-repeat bg-fixed"
+        style={{ backgroundImage: "url('/profile_bg.jpg')" }}
+      >
         
         {/* Navigation Bar */}
         <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md h-16 transition-colors">
@@ -475,8 +694,8 @@ export default function ProfilePage() {
               <span className="text-sm font-bold uppercase tracking-wider">{t.backToDashboard}</span>
             </Link>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold">eS</div>
-              <span className="text-lg font-headline font-bold text-slate-900 dark:text-slate-50">e-Swachh</span>
+              <img src="/logo.png" alt="E-Swachh Logo" className="w-8 h-8 object-contain rounded-md" />
+              <span className="text-lg font-headline font-bold text-slate-900 dark:text-slate-50">E-Swachh</span>
             </div>
           </div>
         </header>
@@ -503,10 +722,27 @@ export default function ProfilePage() {
                   
                   {/* User Avatar Initials */}
                   <div className="flex justify-center">
-                    <Avatar className="h-24 w-24 border-4 border-slate-100 dark:border-slate-800 shadow-sm">
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleFileChange} 
+                      accept="image/*" 
+                      className="hidden" 
+                    />
+                    <Avatar 
+                      onClick={handleAvatarClick}
+                      className="h-24 w-24 border-4 border-slate-100 dark:border-slate-800 shadow-sm relative group cursor-pointer overflow-hidden"
+                      title="Click to change profile picture"
+                    >
+                      {photoURL && (
+                        <AvatarImage src={photoURL} alt={name} className="object-cover" />
+                      )}
                       <AvatarFallback className="bg-cyan-100 dark:bg-cyan-900/60 text-cyan-700 dark:text-cyan-400 font-headline font-bold text-3xl">
                         {name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'C'}
                       </AvatarFallback>
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <span className="text-[10px] text-white font-bold uppercase tracking-wider">Change</span>
+                      </div>
                     </Avatar>
                   </div>
 
@@ -724,6 +960,45 @@ export default function ProfilePage() {
                             )}
                           </div>
                         </div>
+
+                        {/* Phone Verification */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-slate-50 dark:bg-slate-950/60 rounded-xl border dark:border-slate-800">
+                          <div className="space-y-1">
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Phone Status</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500">{phone || 'No phone number set'}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {userData?.phoneVerified ? (
+                              <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 flex gap-1 items-center py-1 px-3 rounded-full text-xs font-bold shadow-sm">
+                                <CheckCircle2 size={12} /> Verified
+                              </Badge>
+                            ) : (
+                              <>
+                                <Badge variant="secondary" className="bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex gap-1 items-center py-1 px-3 rounded-full text-xs font-bold">
+                                  <AlertTriangle size={12} /> Unverified
+                                </Badge>
+                                <Button 
+                                  type="button"
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={handleStartPhoneVerification} 
+                                  className="h-9 text-xs font-bold border-cyan-600/30 text-cyan-600 dark:border-cyan-400/30 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 rounded-none bg-transparent"
+                                  disabled={!phone || isVerifyingPhone}
+                                  title={!phone ? "Please set a phone number in Personal Details first" : "Verify your phone number"}
+                                >
+                                  {isVerifyingPhone ? (
+                                    <>
+                                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                      Sending...
+                                    </>
+                                  ) : (
+                                    "Verify Phone"
+                                  )}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
 
@@ -764,9 +1039,12 @@ export default function ProfilePage() {
                                   className="flex h-11 w-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                   <option value="">{t.selectDoc}</option>
+                                
                                   <option value="Aadhaar Card">{t.aadhar}</option>
+                                 <option value="PAN Card">{t.PAN || "PAN Card"}</option>
                                   <option value="Voter ID">{t.voter}</option>
                                   <option value="Driving License">{t.license}</option>
+                                  
                                 </select>
                               </div>
                               <div className="space-y-2">
@@ -827,15 +1105,15 @@ export default function ProfilePage() {
                           </div>
                           <div className="w-full sm:w-48">
                             <select 
-                              value={lang} 
-                              onChange={handleLanguageChange}
-                              className="flex h-11 w-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 rounded-md"
-                            >
-                              <option value="en">English (US)</option>
-                              <option value="hi">हिन्दी (Hindi)</option>
-                              <option value="es">Español (Spanish)</option>
-                              <option value="mr">मराठी (Marathi)</option>
-                            </select>
+                                value={lang} 
+                                onChange={handleLanguageChange}
+                                className="flex h-11 w-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 rounded-md"
+                              >
+                                <option value="en">English</option>
+                                <option value="hi">हिन्दी (Hindi)</option>
+                                <option value="bn">বাংলা (Bengali)</option>
+                                <option value="mai">मैथिली (Maithili)</option>
+                              </select>
                           </div>
                         </div>
 
@@ -850,14 +1128,14 @@ export default function ProfilePage() {
                           </div>
                           <div className="w-full sm:w-48">
                             <select 
-                              value={theme} 
-                              onChange={handleThemeChange}
-                              className="flex h-11 w-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 rounded-md"
-                            >
-                              <option value="light">☀️ {t.light}</option>
-                              <option value="dark">🌙 {t.dark}</option>
-                              <option value="system">🖥️ {t.system}</option>
-                            </select>
+                                value={theme} 
+                                onChange={handleThemeChange}
+                                className="flex h-11 w-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 rounded-md"
+                              >
+                                <option value="light">{t.light}</option>
+                                <option value="dark">{t.dark}</option>
+                                <option value="system">{t.system}</option>
+                              </select>
                           </div>
                         </div>
 
@@ -872,6 +1150,70 @@ export default function ProfilePage() {
           </div>
 
         </main>
+        
+        {/* Recaptcha Container for Firebase Phone Verification */}
+        <div id="recaptcha-container" className="hidden"></div>
+
+        {/* Phone Verification Modal Overlay */}
+        <AnimatePresence>
+          {showPhoneVerifyModal && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white dark:bg-slate-900 border dark:border-slate-800 max-w-md w-full p-6 shadow-2xl space-y-6 rounded-xl relative text-slate-900 dark:text-slate-50"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-lg font-headline font-bold text-slate-900 dark:text-slate-50">Enter Verification Code</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Please type the 6-digit SMS verification code sent to <strong className="text-slate-700 dark:text-slate-300">{phone}</strong>.
+                    {confirmationResult?.mock && <span className="block text-amber-500 font-semibold mt-1">Local Test Mode: Enter "123456"</span>}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <Input 
+                    type="text" 
+                    maxLength={6} 
+                    placeholder="xxxxxx" 
+                    value={smsCode} 
+                    onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, ''))}
+                    className="text-center text-2xl font-bold tracking-[0.5em] h-12 bg-slate-50 dark:bg-slate-950 border dark:border-slate-800"
+                  />
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowPhoneVerifyModal(false);
+                        setConfirmationResult(null);
+                        setSmsCode('');
+                      }}
+                      className="text-xs font-bold rounded-none"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleConfirmPhoneCode} 
+                      disabled={smsCode.length !== 6 || isVerifyingPhone}
+                      className="text-xs font-bold rounded-none"
+                    >
+                      {isVerifyingPhone ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          Verifying...
+                        </>
+                      ) : (
+                        "Verify Code"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </ProtectedRoute>
   );

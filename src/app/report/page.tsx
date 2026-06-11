@@ -27,13 +27,14 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Camera, Loader2, MapPin, Sparkles, X, ShieldAlert, ArrowLeft, Globe } from 'lucide-react';
 import { categorizeComplaint } from '@/ai/flows/ai-complaint-categorization';
-import { aiComplaintModeration } from '@/ai/flows/ai-complaint-moderation';
+//  import { aiComplaintModeration } from '@/ai/flows/ai-complaint-moderation';
 import { toast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useFirestore, useStorage, useUser } from '@/firebase';
 import { MapProvider } from '@/components/MapProvider';
 import { addHours, addDays } from 'date-fns';
+import type { PickedLocation } from '@/components/LocationPicker';
 
 // Dynamically import LocationPicker to prevent SSR issues with Leaflet
 const LocationPicker = dynamic(
@@ -49,10 +50,10 @@ const formSchema = z.object({
   category: z.string(),
   description: z.string().min(20, { message: "Please provide a more detailed description." }),
   location: z.object({
-    address: z.string().min(5),
-    latitude: z.number(),
-    longitude: z.number(),
-  }),
+    address: z.string().min(1, { message: "Please choose a readable address." }),
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+  }, { required_error: "Please choose the report location on the map." }),
   priority: z.enum(['Low', 'Medium', 'High', 'Critical']),
 });
 
@@ -111,84 +112,110 @@ export default function ReportPage() {
       setIsAnalyzing(false);
     }
   };
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user || !db || !storage) {
-      toast({ title: "Service not available", variant: "destructive" });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const moderation = await aiComplaintModeration({
-        title: values.title,
-        description: values.description,
-        category: values.category,
-        imageUrl: imagePreview || undefined
-      });
-
-      if (moderation.isSuspicious && !aiWarning) {
-        setAiWarning({ isSuspicious: true, reason: moderation.reason });
-        setIsSubmitting(false);
-        return;
-      }
-
-      let imageUrl = "";
-      if (imagePreview) {
-        const storageRef = ref(storage, `complaints/${user.uid}/${Date.now()}`);
-        await uploadString(storageRef, imagePreview, 'data_url');
-        imageUrl = await getDownloadURL(storageRef);
-      }
-
-      let slaDeadline = addDays(new Date(), 7);
-      if (values.priority === 'Critical') slaDeadline = addHours(new Date(), 24);
-      if (values.priority === 'High') slaDeadline = addDays(new Date(), 2);
-      if (values.priority === 'Medium') slaDeadline = addDays(new Date(), 4);
-
-      const complaintData = {
-        ...values,
-        userId: user.uid,
-        userName: user.displayName || "Citizen",
-        imageUrl,
-        status: "Pending",
-        slaDeadline: slaDeadline.toISOString(),
-        isEscalated: false,
-        aiAnalysis: {
-          category: values.category,
-          priority: values.priority,
-          isSuspicious: moderation.isSuspicious,
-          moderationReason: moderation.reason,
-          confidence: moderation.confidenceScore
-        },
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      const docRef = await addDoc(collection(db, "complaints"), complaintData);
-
-      updateDoc(doc(db, 'users', user.uid), {
-        contributionLevel: increment(10)
-      }).catch(e => console.warn("Failed to update points", e));
-
-      addDoc(collection(db, "notifications"), {
-        userId: user.uid,
-        title: "Report Submitted",
-        message: `Your report has been logged. Priority: ${values.priority}. Target resolution: ${slaDeadline.toLocaleDateString()}.`,
-        type: "info",
-        complaintId: docRef.id,
-        read: false,
-        createdAt: serverTimestamp()
-      }).catch(e => console.warn("Failed to send notification", e));
-
-      toast({ title: "Report Submitted Successfully" });
-      router.push(`/track/${docRef.id}`);
-    } catch (error) {
-      toast({ title: "Submission error", variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
-    }
+async function onSubmit(values: z.infer<typeof formSchema>) {
+  if (!user || !db || !storage) {
+    toast({
+      title: "Service not available",
+      variant: "destructive",
+    });
+    return;
   }
 
+  setIsSubmitting(true);
+
+  try {
+    let imageUrl = "";
+
+    if (imagePreview) {
+      const storageRef = ref(
+        storage,
+        `complaints/${user.uid}/${Date.now()}`
+      );
+
+      await uploadString(storageRef, imagePreview, "data_url");
+
+      imageUrl = await getDownloadURL(storageRef);
+    }
+
+    let slaDeadline = addDays(new Date(), 7);
+
+    if (values.priority === "Critical") {
+      slaDeadline = addHours(new Date(), 24);
+    }
+
+    if (values.priority === "High") {
+      slaDeadline = addDays(new Date(), 2);
+    }
+
+    if (values.priority === "Medium") {
+      slaDeadline = addDays(new Date(), 4);
+    }
+
+    const complaintData = {
+      ...values,
+      location: values.location,
+      userId: user.uid,
+      userName: user.displayName || "Citizen",
+      imageUrl,
+      status: "Pending",
+      slaDeadline: slaDeadline.toISOString(),
+      isEscalated: false,
+
+      aiAnalysis: {
+        category: values.category,
+        priority: values.priority,
+        isSuspicious: false,
+        moderationReason: "",
+        confidence: 0,
+      },
+
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    const docRef = await addDoc(
+      collection(db, "complaints"),
+      complaintData
+    );
+
+    updateDoc(doc(db, "users", user.uid), {
+      contributionLevel: increment(10),
+    }).catch((e) =>
+      console.warn("Failed to update points", e)
+    );
+
+    addDoc(collection(db, "notifications"), {
+      userId: user.uid,
+      title: "Report Submitted",
+      message: `Your report has been logged. Priority: ${values.priority}.`,
+      type: "info",
+      complaintId: docRef.id,
+      read: false,
+      createdAt: serverTimestamp(),
+    }).catch((e) =>
+      console.warn("Failed to send notification", e)
+    );
+
+    toast({
+      title: "Report Submitted Successfully",
+    });
+
+    router.push(`/track/${docRef.id}`);
+
+  } catch (error) {
+    console.error(error);
+
+    toast({
+      title: "Submission error",
+      variant: "destructive",
+    });
+
+  } finally {
+    setIsSubmitting(false);
+  }
+}
+ 
+ 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
       <div className="container mx-auto px-4 max-w-2xl">
@@ -308,16 +335,31 @@ export default function ReportPage() {
                   )}
                 />
 
-                <div className="space-y-4">
-                  <FormLabel className="flex items-center gap-2 font-bold text-slate-700">
-                    <MapPin className="h-4 w-4" /> Location
-                  </FormLabel>
-                  <div className="w-full min-h-[400px]">
-                    <MapProvider>
-                      <LocationPicker onLocationSelect={(loc) => form.setValue('location', loc)} />
-                    </MapProvider>
-                  </div>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem className="space-y-4">
+                      <FormLabel className="flex items-center gap-2 font-bold text-slate-700">
+                        <MapPin className="h-4 w-4" /> Location
+                      </FormLabel>
+                      <FormControl>
+                        <div className="w-full min-h-[400px]">
+                          <MapProvider>
+                            <LocationPicker
+                              initialLocation={field.value as PickedLocation | undefined}
+                              onLocationSelect={(loc) => {
+                                field.onChange(loc);
+                                form.clearErrors('location');
+                              }}
+                            />
+                          </MapProvider>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="space-y-4">
                   <FormLabel className="flex items-center gap-2 font-bold text-slate-700">
@@ -339,7 +381,7 @@ export default function ReportPage() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full h-11 text-sm font-bold shadow-md" disabled={isSubmitting}>
+                <Button type="submit" className="w-full h-11 text-sm font-bold shadow-md" >
                   {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Submit Report"}
                 </Button>
               </form>
@@ -348,5 +390,5 @@ export default function ReportPage() {
         </Card>
       </div>
     </div>
-  );
-}
+  )
+  }

@@ -75,6 +75,9 @@ export default function TrackPage() {
 
   const currentStatus = statusMap[complaint.status || "Pending"];
   const StatusIcon = currentStatus.icon;
+  const locationAddress = typeof complaint.location === 'string'
+    ? complaint.location
+    : complaint.location?.address || 'Location provided';
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 lg:py-12">
@@ -97,7 +100,7 @@ export default function TrackPage() {
                   <div className="space-y-1">
                     <CardTitle className="text-3xl font-headline font-bold">{complaint.title}</CardTitle>
                     <p className="text-muted-foreground flex items-center gap-1 text-sm">
-                      <MapPin size={14} /> {complaint.location}
+                      <MapPin size={14} /> {locationAddress}
                     </p>
                   </div>
                   <Badge className={`${currentStatus.color} text-white px-4 py-2 text-sm rounded-full font-bold shadow-sm`}>

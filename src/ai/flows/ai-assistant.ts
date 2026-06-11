@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview e-Swachh Assistant chatbot flow.
+ * @fileOverview E-Swachh Assistant chatbot flow.
  */
 
 import { ai } from '@/ai/genkit';
@@ -27,7 +27,7 @@ const prompt = ai.definePrompt({
   name: 'aiAssistantPrompt',
   input: { schema: AiAssistantInputSchema },
   output: { schema: AiAssistantOutputSchema },
-  prompt: `You are the e-Swachh Smart Assistant, a friendly and efficient helper for citizens. 
+  prompt: `You are the E-Swachh Smart Assistant, a friendly and efficient helper for citizens. 
 Your goal is to help users navigate the platform, explain how to file complaints, provide information on civic issues, and answer questions about city governance.
 
 Platform Context:

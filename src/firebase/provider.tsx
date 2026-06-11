@@ -56,7 +56,7 @@ export function FirebaseProvider({
           <div className="space-y-3">
             <h1 className="text-3xl font-headline font-extrabold text-[#1A2E28]">Secure Connect</h1>
             <p className="text-[#64748b] text-sm leading-relaxed">
-              e-Swachh requires an active connection to the municipal governance cloud. Please configure your project credentials to begin.
+              E-Swachh requires an active connection to the municipal governance cloud. Please configure your project credentials to begin.
             </p>
           </div>
           

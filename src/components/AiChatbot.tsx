@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export function AiChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model', content: string }[]>([
-    { role: 'model', content: "Hello! I'm your e-Swachh Assistant. How can I help you improve the city today?" }
+    { role: 'model', content: "Hello! I'm your E-Swachh Assistant. How can I help you improve the city today?" }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -62,10 +62,11 @@ export function AiChatbot() {
           >
             <Button 
               size="icon" 
-              className="h-14 w-14 rounded-full shadow-lg bg-primary text-primary-foreground border-none" 
+              className="h-14 w-14 rounded-full shadow-lg bg-white border border-slate-200 overflow-hidden relative group" 
               onClick={() => setIsOpen(true)}
+              aria-label="Open Chatbot"
             >
-              <MessageSquare className="h-6 w-6" />
+              <img src="/chatbot_logo.png" alt="Chatbot" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
             </Button>
           </motion.div>
         ) : (
@@ -77,8 +78,8 @@ export function AiChatbot() {
             <Card className="w-[380px] h-[520px] shadow-2xl border flex flex-col rounded-xl overflow-hidden bg-white">
               <CardHeader className="bg-white p-4 flex flex-row items-center justify-between border-b">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs">AI</div>
-                  <CardTitle className="text-sm font-bold text-slate-900">Civic Assistant</CardTitle>
+                  <img src="/chatbot_logo.png" alt="Chatbot Logo" className="w-8 h-8 object-contain rounded-full border border-slate-100 bg-white" />
+                  <CardTitle className="text-sm font-bold text-slate-900">E-Swacch Assistant</CardTitle>
                 </div>
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900" onClick={() => setIsOpen(false)}>
                   <X className="h-4 w-4" />

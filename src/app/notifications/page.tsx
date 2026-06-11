@@ -54,14 +54,14 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 lg:py-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950/60 py-8 lg:py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div className="space-y-1">
             <Link href="/dashboard" className="text-primary hover:underline text-sm flex items-center gap-1 mb-2">
               <ArrowLeft size={14} /> Back to Dashboard
             </Link>
-            <h1 className="text-3xl font-headline font-bold text-slate-900">Activity History</h1>
+            <h1 className="text-3xl font-headline font-bold text-slate-900 dark:text-slate-100">Activity History</h1>
             <p className="text-muted-foreground">Stay updated on your civic reports and system alerts.</p>
           </div>
         </div>
@@ -69,14 +69,14 @@ export default function NotificationsPage() {
         <div className="space-y-4">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i} className="animate-pulse h-24 bg-white border-none" />
+              <Card key={i} className="animate-pulse h-24 bg-white dark:bg-slate-900 border-none" />
             ))
           ) : !notifications || notifications.length === 0 ? (
-            <Card className="border-none shadow-sm bg-white py-20">
+            <Card className="border-none shadow-sm bg-white dark:bg-slate-900 py-20">
               <CardContent className="flex flex-col items-center gap-4">
-                <Bell size={48} className="text-slate-200" strokeWidth={1} />
-                <h3 className="text-lg font-bold text-slate-900">No activity yet</h3>
-                <p className="text-slate-400 text-sm">Notifications will appear here as your reports are processed.</p>
+                <Bell size={48} className="text-slate-200 dark:text-slate-800" strokeWidth={1} />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">No activity yet</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-sm">Notifications will appear here as your reports are processed.</p>
               </CardContent>
             </Card>
           ) : (
@@ -85,16 +85,16 @@ export default function NotificationsPage() {
                 key={n.id} 
                 className={cn(
                   "border-none shadow-sm transition-all hover:shadow-md",
-                  !n.read ? "bg-white ring-1 ring-primary/10" : "bg-white/80"
+                  !n.read ? "bg-white dark:bg-slate-900 ring-1 ring-primary/10" : "bg-white/80 dark:bg-slate-900/80"
                 )}
               >
                 <CardContent className="p-5 flex items-start gap-4">
-                  <div className="mt-1 shrink-0 p-2 bg-slate-50 rounded-lg">
+                  <div className="mt-1 shrink-0 p-2 bg-slate-50 dark:bg-slate-950 rounded-lg">
                     {getIcon(n.type)}
                   </div>
                   <div className="flex-1 space-y-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <h4 className={cn("text-sm font-bold truncate", !n.read ? "text-slate-900" : "text-slate-600")}>
+                      <h4 className={cn("text-sm font-bold truncate", !n.read ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-400")}>
                         {n.title}
                       </h4>
                       <div className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export default function NotificationsPage() {
                         )}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
                       {n.message}
                     </p>
                     <div className="flex items-center gap-3 pt-3">

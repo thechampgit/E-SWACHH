@@ -4,110 +4,32 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Base Theme */
 @layer base {
   :root {
     --background: 160 20% 97%;
     --foreground: 160 28% 14%;
-    --card: 0 0% 100%;
-    --card-foreground: 160 28% 14%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 160 28% 14%;
-    --primary: 191 91% 37%; /* Harmonized to Cyan-Blue (matches cyan-600) */
-    --primary-foreground: 191 20% 98%;
-    --secondary: 93 17% 92%;
-    --secondary-foreground: 191 84% 15%;
-    --muted: 160 10% 94%;
-    --muted-foreground: 160 15% 45%;
-    --accent: 93 17% 52%;
-    --accent-foreground: 191 20% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 160 15% 88%;
-    --input: 160 15% 88%;
-    --ring: 191 91% 37%; /* Harmonized ring color */
+    --primary: 191 91% 37%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 160 24% 6%;
-    --foreground: 160 10% 98%;
-    --card: 160 24% 9%;
-    --card-foreground: 160 10% 98%;
-    --popover: 160 24% 9%;
-    --popover-foreground: 160 10% 98%;
-    --primary: 191 91% 43%; /* Brighter Cyan-Blue for dark mode readability */
-    --primary-foreground: 191 10% 98%;
-    --secondary: 160 15% 15%;
-    --secondary-foreground: 191 84% 85%;
-    --muted: 160 10% 12%;
-    --muted-foreground: 160 10% 65%;
-    --accent: 93 17% 45%;
-    --accent-foreground: 191 10% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 160 15% 15%;
-    --input: 160 15% 15%;
-    --ring: 191 91% 43%; /* Harmonized ring color */
+    --background: 160 20% 6%;
+    --foreground: 160 10% 95%;
+    --primary: 191 91% 37%;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-background text-foreground font-body antialiased;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-headline font-bold tracking-tight text-slate-900 dark:text-slate-50;
+    @apply bg-background text-foreground antialiased;
   }
 }
 
-/* Leaflet Overrides */
-.leaflet-container {
-  @apply rounded-xl font-body;
-  background-color: #f1f7f5 !important;
-}
-
-.leaflet-popup-content-wrapper {
-  @apply rounded-lg shadow-xl border-none p-0 overflow-hidden;
-}
-
-.leaflet-popup-content {
-  margin: 0 !important;
-  width: auto !important;
-}
-
-.leaflet-popup-tip-container {
-  display: none;
-}
-
-.leaflet-control-zoom {
-  @apply border-none shadow-md rounded-lg overflow-hidden !important;
-}
-
-.leaflet-control-zoom-in, .leaflet-control-zoom-out {
-  @apply bg-white text-slate-600 border-none hover:bg-slate-50 !important;
-}
-
-/* Minimalist Utilities */
-.shadow-subtle {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-}
-
-.card-hover {
-  @apply transition-all duration-200 hover:shadow-md hover:border-slate-300;
-}
-
-/* Custom Scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-slate-50;
-}
-
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+  @apply bg-gray-300 rounded-full;
 }
