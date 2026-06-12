@@ -3,8 +3,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { useFirestore, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,10 @@ import {
   User,
   AlertTriangle,
   Camera,
-  Search as SearchIcon
+  Search as SearchIcon,
+  ThumbsUp,
+  Flame,
+  Building2
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
@@ -35,6 +38,7 @@ export default function TrackPage() {
   const { id } = useParams();
   const router = useRouter();
   const db = useFirestore();
+  const { user } = useUser();
   const [complaint, setComplaint] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -137,9 +141,18 @@ export default function TrackPage() {
 
                 <div className="grid grid-cols-2 gap-6 pt-6 border-t border-slate-100">
                   <InfoItem label="Category" value={complaint.category} icon={<Tag size={12} />} />
-                  <InfoItem label="Priority" value={complaint.priority} icon={<AlertTriangle size={12} />} isBadge priority={complaint.priority} />
+                  <InfoItem 
+                    label="Priority" 
+                    value={(complaint.upvotes?.length || 0) >= 5 ? "Trending" : complaint.priority} 
+                    icon={<AlertTriangle size={12} />} 
+                    isBadge 
+                    priority={complaint.priority} 
+                    upvotes={complaint.upvotes} 
+                  />
                   <InfoItem label="Submitted" value={complaint.createdAt?.toDate().toLocaleDateString() || 'Recently'} icon={<Calendar size={12} />} />
                   <InfoItem label="Reporter" value={complaint.userName || 'Citizen'} icon={<User size={12} />} />
+                  <InfoItem label="Municipal Zone" value={complaint.zone || 'Central Zone'} icon={<MapPin size={12} />} />
+                  <InfoItem label="Assigned Dept" value={complaint.department || 'Solid Waste Management'} icon={<Building2 size={12} />} />
                 </div>
 
                 <div className="space-y-3 pt-6 border-t border-slate-100">
@@ -147,6 +160,45 @@ export default function TrackPage() {
                   <p className="text-slate-600 leading-relaxed bg-slate-50 p-5 rounded-xl border border-slate-100 italic text-sm">
                     "{complaint.description}"
                   </p>
+                </div>
+
+                {/* Community Watch Support Section */}
+                <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-slate-900 text-sm uppercase tracking-wider">Community Watch</h4>
+                    <p className="text-xs text-slate-500">
+                      {(complaint.upvotes?.length || 0)} {(complaint.upvotes?.length || 0) === 1 ? 'citizen supports' : 'citizens support'} this report.
+                    </p>
+                  </div>
+                  {user && user.uid !== complaint.userId && (
+                    <Button 
+                      onClick={async () => {
+                        const upvotes = complaint.upvotes || [];
+                        const isUpvoted = upvotes.includes(user.uid);
+                        const docRef = doc(db, "complaints", complaint.id);
+                        try {
+                          if (isUpvoted) {
+                            await updateDoc(docRef, { upvotes: arrayRemove(user.uid) });
+                          } else {
+                            await updateDoc(docRef, { upvotes: arrayUnion(user.uid) });
+                          }
+                        } catch (err) {
+                          console.error("Error upvoting: ", err);
+                        }
+                      }}
+                      variant={complaint.upvotes?.includes(user.uid) ? "default" : "outline"}
+                      className={`h-10 px-4 text-sm flex items-center gap-2 transition-all ${
+                        complaint.upvotes?.includes(user.uid)
+                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white border-none shadow-sm'
+                          : 'hover:bg-slate-50 text-slate-600 border-slate-200 dark:border-slate-800'
+                      }`}
+                    >
+                      <ThumbsUp size={16} className={complaint.upvotes?.includes(user.uid) ? "fill-white text-white" : "text-slate-400"} />
+                      <span className="font-bold">
+                        {complaint.upvotes?.includes(user.uid) ? 'Supported' : 'Support Issue'}
+                      </span>
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -218,16 +270,23 @@ export default function TrackPage() {
   );
 }
 
-function InfoItem({ label, value, icon, isBadge, priority }: any) {
+function InfoItem({ label, value, icon, isBadge, priority, upvotes }: any) {
+  const isTrending = value === 'Trending' || (upvotes?.length || 0) >= 5;
   return (
     <div className="space-y-1">
       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
         {icon} {label}
       </p>
       {isBadge ? (
-        <Badge variant={priority === 'High' ? 'destructive' : priority === 'Medium' ? 'default' : 'secondary'} className="text-[10px] px-2">
-          {value}
-        </Badge>
+        isTrending ? (
+          <Badge className="text-[10px] font-extrabold uppercase bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white border-none flex items-center gap-0.5 animate-pulse shadow-sm shadow-orange-500/20 px-2 py-0.5">
+            <Flame size={10} className="fill-current" /> Trending
+          </Badge>
+        ) : (
+          <Badge variant={priority === 'High' || priority === 'Critical' ? 'destructive' : priority === 'Medium' ? 'default' : 'secondary'} className="text-[10px] px-2">
+            {value}
+          </Badge>
+        )
       ) : (
         <p className="font-bold text-slate-800 text-sm">{value}</p>
       )}

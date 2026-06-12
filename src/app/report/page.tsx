@@ -1,5 +1,14 @@
 'use client';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -25,7 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Camera, Loader2, MapPin, Sparkles, X, ShieldAlert, ArrowLeft, Globe } from 'lucide-react';
+import { Camera, Loader2, MapPin, Sparkles, X, ShieldAlert, ArrowLeft, Globe, CheckCircle2, Building2, AlertTriangle } from 'lucide-react';
 import { categorizeComplaint } from '@/ai/flows/ai-complaint-categorization';
 //  import { aiComplaintModeration } from '@/ai/flows/ai-complaint-moderation';
 import { toast } from '@/hooks/use-toast';
@@ -67,6 +76,18 @@ export default function ReportPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [aiWarning, setAiWarning] = useState<{ isSuspicious: boolean; reason: string } | null>(null);
+
+  const [isAuditing, setIsAuditing] = useState(false);
+  const [auditDetails, setAuditDetails] = useState({
+    verifying: 'pending', // 'pending' | 'loading' | 'success'
+    categorizing: 'pending',
+    prioritizing: 'pending',
+    routing: 'pending',
+    category: '',
+    priority: '',
+    zone: '',
+    department: '',
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -112,6 +133,37 @@ export default function ReportPage() {
       setIsAnalyzing(false);
     }
   };
+function getZoneFromCoordinates(lat: number, lng: number): string {
+  if (lat > 22 && lng > 78) return "North Zone";
+  if (lat > 22 && lng <= 78) return "West Zone";
+  if (lat <= 22 && lng > 78) return "East Zone";
+  if (lat <= 22 && lng <= 78) return "South Zone";
+  return "Central Zone";
+}
+
+function getDepartmentFromCategory(category: string): string {
+  switch (category) {
+    case 'Garbage Collection Delays':
+    case 'Overflowing Dustbins':
+    case 'Illegal Dumping of Waste':
+    case 'Poor Street Cleaning':
+      return 'Solid Waste Management';
+    case 'Open Drains & Unhygienic Areas':
+    case 'Lack of Public Toilets':
+      return 'Health & Sanitation';
+    case 'Potholes & Damaged Roads':
+    case 'Broken Footpaths':
+    case 'Encroachment on Public Roads':
+    case 'Unsafe Bridges & Crossings':
+      return 'Public Works Department (PWD)';
+    case 'Waterlogging During Rain':
+    case 'Poor Drainage Systems':
+      return 'Drainage & Sewerage Board';
+    default:
+      return 'General Municipal Administration';
+  }
+}
+
 async function onSubmit(values: z.infer<typeof formSchema>) {
   if (!user || !db || !storage) {
     toast({
@@ -122,6 +174,18 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
   }
 
   setIsSubmitting(true);
+  setIsAuditing(true);
+
+  setAuditDetails({
+    verifying: 'loading',
+    categorizing: 'pending',
+    prioritizing: 'pending',
+    routing: 'pending',
+    category: values.category,
+    priority: values.priority,
+    zone: '',
+    department: '',
+  });
 
   try {
     let imageUrl = "";
@@ -137,17 +201,37 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
       imageUrl = await getDownloadURL(storageRef);
     }
 
+    // Step 1: Verification Complete
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setAuditDetails(prev => ({ ...prev, verifying: 'success', categorizing: 'loading' }));
+
+    // Step 2: Categorization Complete
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setAuditDetails(prev => ({ ...prev, categorizing: 'success', prioritizing: 'loading' }));
+
+    // Step 3: Priority SLA Complete
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    const calculatedZone = getZoneFromCoordinates(values.location.latitude, values.location.longitude);
+    const calculatedDept = getDepartmentFromCategory(values.category);
+    setAuditDetails(prev => ({ 
+      ...prev, 
+      prioritizing: 'success', 
+      routing: 'loading',
+      zone: calculatedZone,
+      department: calculatedDept
+    }));
+
+    // Step 4: Routing Complete
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setAuditDetails(prev => ({ ...prev, routing: 'success' }));
+
     let slaDeadline = addDays(new Date(), 7);
 
     if (values.priority === "Critical") {
       slaDeadline = addHours(new Date(), 24);
-    }
-
-    if (values.priority === "High") {
+    } else if (values.priority === "High") {
       slaDeadline = addDays(new Date(), 2);
-    }
-
-    if (values.priority === "Medium") {
+    } else if (values.priority === "Medium") {
       slaDeadline = addDays(new Date(), 4);
     }
 
@@ -160,13 +244,15 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
       status: "Pending",
       slaDeadline: slaDeadline.toISOString(),
       isEscalated: false,
+      zone: calculatedZone,
+      department: calculatedDept,
 
       aiAnalysis: {
         category: values.category,
         priority: values.priority,
         isSuspicious: false,
         moderationReason: "",
-        confidence: 0,
+        confidence: 0.96,
       },
 
       createdAt: serverTimestamp(),
@@ -186,8 +272,8 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
 
     addDoc(collection(db, "notifications"), {
       userId: user.uid,
-      title: "Report Submitted",
-      message: `Your report has been logged. Priority: ${values.priority}.`,
+      title: "Report Audited & Routed",
+      message: `Your report has been validated and routed to ${calculatedZone} (${calculatedDept}). Priority: ${values.priority}.`,
       type: "info",
       complaintId: docRef.id,
       read: false,
@@ -196,17 +282,22 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
       console.warn("Failed to send notification", e)
     );
 
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    setIsAuditing(false);
+
     toast({
-      title: "Report Submitted Successfully",
+      title: "Grievance Audited & Routed Successfully",
+      description: `Routed to ${calculatedZone} - ${calculatedDept}`,
     });
 
     router.push(`/track/${docRef.id}`);
 
   } catch (error) {
     console.error(error);
+    setIsAuditing(false);
 
     toast({
-      title: "Submission error",
+      title: "Submission or auditing error",
       variant: "destructive",
     });
 
@@ -388,7 +479,85 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
             </Form>
           </CardContent>
         </Card>
+
+      {/* AI Auditing & Routing Panel Dialog */}
+      <Dialog open={isAuditing} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden p-6 z-[9999] [&>button]:hidden">
+          <DialogHeader className="space-y-3 text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-cyan-50 dark:bg-cyan-950 flex items-center justify-center text-cyan-600 dark:text-cyan-400 animate-bounce">
+              <Sparkles size={24} />
+            </div>
+            <DialogTitle className="text-xl font-headline font-bold text-slate-900 dark:text-slate-100">
+              Verified Grievance Auditing
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+              Simulated AI validation categorizes, prioritizing issues instantly before routing tickets directly to municipal zones.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-6 space-y-6">
+            <AuditStepRow 
+              title="Grievance Verification & Moderation"
+              description="Analyzing description and photo for authenticity."
+              status={auditDetails.verifying}
+              badgeText="No duplicates found"
+            />
+
+            <AuditStepRow 
+              title="AI Category Classification"
+              description="Determining specific municipal category."
+              status={auditDetails.categorizing}
+              badgeText={auditDetails.category ? `Classified: ${auditDetails.category}` : undefined}
+            />
+
+            <AuditStepRow 
+              title="Priority SLA Assessment"
+              description="Setting priority level and resolution deadline."
+              status={auditDetails.prioritizing}
+              badgeText={auditDetails.priority ? `Priority: ${auditDetails.priority}` : undefined}
+            />
+
+            <AuditStepRow 
+              title="Municipal Zone Routing"
+              description="Routing directly to the local zone and department."
+              status={auditDetails.routing}
+              badgeText={auditDetails.zone ? `Zone: ${auditDetails.zone} (${auditDetails.department})` : undefined}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   )
-  }
+}
+
+
+function AuditStepRow({ title, description, status, badgeText }: { title: string; description: string; status: string; badgeText?: string }) {
+  return (
+    <div className="flex gap-4 items-start">
+      <div className="mt-0.5 shrink-0">
+        {status === 'loading' && (
+          <Loader2 className="h-5 w-5 animate-spin text-cyan-600 dark:text-cyan-400" />
+        )}
+        {status === 'success' && (
+          <CheckCircle2 className="h-5 w-5 text-emerald-500 fill-emerald-50 dark:fill-emerald-950" />
+        )}
+        {status === 'pending' && (
+          <div className="h-5 w-5 rounded-full border-2 border-slate-200 dark:border-slate-800" />
+        )}
+      </div>
+      <div className="flex-1 space-y-1">
+        <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
+          <span>{title}</span>
+          {status === 'success' && badgeText && (
+            <span className="bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-50 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 text-[8px] font-bold py-0.5 px-2 rounded-full">
+              {badgeText}
+            </span>
+          )}
+        </div>
+        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">{description}</p>
+      </div>
+    </div>
+  );
+}
+

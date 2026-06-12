@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
-import { Linkedin, Instagram, Github, Mail } from 'lucide-react';
+import { Linkedin, Instagram, Github, Mail, CopyCheckIcon, MapPinCheckInsideIcon, TreesIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -468,8 +468,8 @@ export default function LandingPage() {
                   <h3 className="text-xl font-headline font-bold mb-4 text-slate-900 tracking-tight">Verified Grievance Auditing</h3>
                   <p className="text-slate-500 text-sm leading-relaxed mb-6">Simulated AI validation categorizes, prioritizing issues instantly before routing tickets directly to municipal zones.</p>
                 </div>
-                <Link href="/login" className="inline-flex items-center gap-1 text-xs uppercase tracking-wider font-bold text-cyan-600 hover:text-cyan-700 mt-4 transition-colors">
-                  Learn more <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <Link href={user ? "/report?audit=true" : "/login"} className="inline-flex items-center gap-1 text-xs uppercase tracking-wider font-bold text-cyan-600 hover:text-cyan-700 mt-4 transition-colors">
+                  Start Audit <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
               </div>
 
@@ -494,10 +494,51 @@ export default function LandingPage() {
                   <h3 className="text-xl font-headline font-bold mb-4 text-slate-900 tracking-tight">Community Watch Upvoting</h3>
                   <p className="text-slate-500 text-sm leading-relaxed mb-6">Promote neighbor issues inside the dashboard. Highly supported concerns gain a dynamic Trending status priority.</p>
                 </div>
-                <Link href="/login" className="inline-flex items-center gap-1 text-xs uppercase tracking-wider font-bold text-cyan-600 hover:text-cyan-700 mt-4 transition-colors">
+                <Link href={user ? "/dashboard?tab=community-watch" : "/login"} className="inline-flex items-center gap-1 text-xs uppercase tracking-wider font-bold text-cyan-600 hover:text-cyan-700 mt-4 transition-colors">
                   Join Watch <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
               </div>
+
+               <div className="p-10 flex flex-col justify-between hover:bg-slate-50/50 transition-colors group">
+                <div>
+                  <div className="w-10 h-10 bg-cyan-50 text-cyan-600 flex items-center justify-center mb-8">
+                    <CopyCheckIcon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-headline font-bold mb-4 text-slate-900 tracking-tight">Smart Issue Detection</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed mb-6">AI-powered image analysis identifies waste types and urgency levels automatically.</p>
+                </div>
+                <Link href="/login" className="inline-flex items-center gap-1 text-xs uppercase tracking-wider font-bold text-cyan-600 hover:text-cyan-700 mt-4 transition-colors">
+                  Analyze Report <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </Link>
+              </div>
+
+              <div className="p-10 flex flex-col justify-between hover:bg-slate-50/50 transition-colors group">
+                <div>
+                  <div className="w-10 h-10 bg-cyan-50 text-cyan-600 flex items-center justify-center mb-8">
+                    <MapPinCheckInsideIcon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-headline font-bold mb-4 text-slate-900 tracking-tight">Nearby Dustbin Locator</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed mb-6">Find nearby waste disposal and recycling centers using GPS.</p>
+                </div>
+                <Link href="/map" className="inline-flex items-center gap-1 text-xs uppercase tracking-wider font-bold text-cyan-600 hover:text-cyan-700 mt-4 transition-colors">
+                  FIND LOCATIONS <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </Link>
+              </div>
+
+
+              <div className="p-10 flex flex-col justify-between hover:bg-slate-50/50 transition-colors group">
+                <div>
+                  <div className="w-10 h-10 bg-cyan-50 text-cyan-600 flex items-center justify-center mb-8">
+                    <TreesIcon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-headline font-bold mb-4 text-slate-900 tracking-tight">Waste Segregation Guide</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed mb-6">Interactive guides helping citizens separate biodegradable and non-biodegradable waste.</p>
+                </div>
+                <Link href="/segregation" className="inline-flex items-center gap-1 text-xs uppercase tracking-wider font-bold text-cyan-600 hover:text-cyan-700 mt-4 transition-colors">
+                  learn more <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </Link>
+              </div>
+
 
             </div>
           </div>

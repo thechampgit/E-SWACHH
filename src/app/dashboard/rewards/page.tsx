@@ -31,6 +31,7 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePreferences } from '@/context/PreferencesContext';
 
 // Defined catalog items
 const REWARDS_CATALOG = [
@@ -86,6 +87,7 @@ export default function RewardsPage() {
   const auth = useAuth();
   const { user } = useUser();
   const router = useRouter();
+  const { t } = usePreferences();
 
   // Active view tab: 'shop' or 'vouchers'
   const [activeSubTab, setActiveSubTab] = useState<'shop' | 'vouchers'>('shop');
@@ -181,20 +183,20 @@ export default function RewardsPage() {
       style={{ backgroundImage: "url('/portal_bg.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
     >
       {/* HEADER */}
-      <header className="fixed top-0 z-[100] w-full border-b bg-white/95 backdrop-blur-md h-16">
+      <header className="fixed top-0 z-[100] w-full border-b dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md h-16">
         <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="E-Swachh Logo" className="w-8 h-8 object-contain rounded-md" />
-            <span className="text-lg font-headline font-bold text-slate-900">E-Swachh</span>
+            <span className="text-lg font-headline font-bold text-slate-900 dark:text-slate-100">E-Swachh</span>
           </Link>
           <div className="flex items-center gap-4">
             <NotificationCenter />
             <Button variant="ghost" size="icon" asChild className="rounded-full">
-              <Link href="/profile" title="View Profile">
-                <User className="h-4 w-4 text-slate-600" />
+              <Link href="/profile" title={t.profile || "Profile"}>
+                <User className="h-4 w-4 text-slate-600 dark:text-slate-400" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full hover:text-destructive hover:bg-destructive/10" title="Logout">
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full hover:text-destructive hover:bg-destructive/10" title={t.logout || "Logout"}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -207,10 +209,10 @@ export default function RewardsPage() {
         {/* Welcome Section & Pulsating Balance Card */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
           <div className="md:col-span-2">
-            <h1 className="text-2xl font-headline font-bold text-slate-900 flex items-center gap-2">
-              Eco-Rewards Marketplace <Sparkles className="text-amber-500 h-5 w-5 animate-pulse" />
+            <h1 className="text-2xl font-headline font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              {t.rewardsTitle || 'Eco-Rewards Marketplace'} <Sparkles className="text-amber-500 h-5 w-5 animate-pulse" />
             </h1>
-            <p className="text-sm text-slate-600">Redeem points earned from reporting issues and helping keep the city clean for awesome, eco-friendly vouchers!</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{t.rewardsSubtitle}</p>
           </div>
           
           {/* PREMIUM BALANCE CARD */}
@@ -221,37 +223,37 @@ export default function RewardsPage() {
             <div className="absolute -right-6 -bottom-6 text-white/10 opacity-30 pointer-events-none">
               <Trophy size={110} />
             </div>
-            <span className="text-[10px] uppercase font-extrabold tracking-widest text-amber-100 flex items-center gap-1.5 mb-1">
-              <Sparkles size={12} className="animate-spin-slow" /> Points Balance
+            <span className="text-[10px] uppercase font-extrabold tracking-widest text-amber-100 dark:text-amber-200 flex items-center gap-1.5 mb-1">
+              <Sparkles size={12} className="animate-spin-slow" /> {t.pointsBalance || 'Points Balance'}
             </span>
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-headline font-black tracking-tight">{currentPointsBalance}</span>
               <span className="text-xs uppercase font-extrabold text-amber-200">pts</span>
             </div>
-            <p className="text-[10px] text-amber-100 mt-2 font-medium">Keep reporting cleanliness issues to stack more points!</p>
+            <p className="text-[10px] text-amber-100 mt-2 font-medium">{t.pointsTip || 'Keep reporting cleanliness issues to stack more points!'}</p>
           </motion.div>
         </div>
 
         {/* SUB-NAVIGATION TABS */}
-        <div className="border-b border-slate-200">
+        <div className="border-b border-slate-200 dark:border-slate-800">
           <div className="flex gap-8">
             <Link 
               href="/dashboard" 
-              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:border-slate-400 flex items-center gap-2 transition-all"
+              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-400 dark:hover:border-slate-700 flex items-center gap-2 transition-all"
             >
-              <LayoutDashboard className="h-4 w-4" /> My Dashboard
+              <LayoutDashboard className="h-4 w-4" /> {t.myDashboard}
             </Link>
             <Link 
               href="/dashboard/leaderboard" 
               className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:border-slate-400 flex items-center gap-2 transition-all"
             >
-              <Trophy className="h-4 w-4" /> Swachh Warriors
+              <Trophy className="h-4 w-4" /> {t.swachhWarriors}
             </Link>
             <Link 
               href="/dashboard/rewards" 
-              className="border-b-2 border-cyan-600 pb-3 text-sm font-bold text-cyan-600 flex items-center gap-2 transition-all"
+              className="border-b-2 border-cyan-600 dark:border-cyan-400 pb-3 text-sm font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-2 transition-all"
             >
-              <Gift className="h-4 w-4" /> Eco Rewards
+              <Gift className="h-4 w-4" /> {t.ecoRewards}
             </Link>
           </div>
         </div>
@@ -264,7 +266,7 @@ export default function RewardsPage() {
             onClick={() => setActiveSubTab('shop')}
             className="rounded-xl px-4 text-xs font-bold"
           >
-            <Gift className="h-3.5 w-3.5 mr-1.5" /> Rewards Shop
+            <Gift className="h-3.5 w-3.5 mr-1.5" /> {t.shop || 'Eco Shop'}
           </Button>
           <Button 
             variant={activeSubTab === 'vouchers' ? 'default' : 'outline'}
@@ -272,7 +274,7 @@ export default function RewardsPage() {
             onClick={() => setActiveSubTab('vouchers')}
             className="rounded-xl px-4 text-xs font-bold relative"
           >
-            <Tag className="h-3.5 w-3.5 mr-1.5" /> My Vouchers
+            <Tag className="h-3.5 w-3.5 mr-1.5" /> {t.myVouchers}
             {vouchers.filter(v => v.status === 'Active').length > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-[9px] w-4.5 h-4.5 flex items-center justify-center font-bold">
                 {vouchers.filter(v => v.status === 'Active').length}
@@ -296,21 +298,21 @@ export default function RewardsPage() {
                 const canAfford = currentPointsBalance >= reward.pointsCost;
                 
                 return (
-                  <Card key={reward.id} className="border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col bg-white group">
+                  <Card key={reward.id} className="border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col bg-white dark:bg-slate-900 group">
                     <CardHeader className="p-5 pb-3">
                       <div className="flex items-center justify-between mb-3">
                         <div className={`p-2.5 rounded-xl border ${reward.iconColor}`}>
                           <IconComponent size={20} className="group-hover:scale-110 transition-transform duration-300" />
                         </div>
-                        <Badge variant="outline" className="border-amber-200 bg-amber-500/10 text-amber-700 font-extrabold uppercase text-[9px] py-1 px-2.5">
+                        <Badge variant="outline" className="border-amber-200 dark:border-amber-900 bg-amber-500/10 dark:bg-amber-950/30 text-amber-700 dark:text-amber-500 font-extrabold uppercase text-[9px] py-1 px-2.5">
                           {reward.pointsCost} Points
                         </Badge>
                       </div>
-                      <CardTitle className="text-base font-bold text-slate-800 line-clamp-1">{reward.title}</CardTitle>
-                      <CardDescription className="text-xs text-slate-400 font-bold uppercase tracking-wider">{reward.ecoBenefit}</CardDescription>
+                      <CardTitle className="text-base font-bold text-slate-800 dark:text-slate-100 line-clamp-1">{reward.title}</CardTitle>
+                      <CardDescription className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{reward.ecoBenefit}</CardDescription>
                     </CardHeader>
                     <CardContent className="p-5 pt-0 flex-1 flex flex-col justify-between gap-4">
-                      <p className="text-xs text-slate-500 leading-relaxed">{reward.description}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{reward.description}</p>
                       
                       <Button 
                         onClick={() => handleRedeemClick(reward)}
@@ -320,7 +322,7 @@ export default function RewardsPage() {
                             : 'bg-slate-100 text-slate-400 cursor-not-allowed hover:bg-slate-100'
                         }`}
                       >
-                        {canAfford ? 'Redeem Voucher' : 'Insufficient Points'} <ArrowRight size={13} className="ml-1.5" />
+                        {canAfford ? (t.redeem || 'Redeem Voucher') : (t.insufficientPoints || 'Insufficient Points')} <ArrowRight size={13} className="ml-1.5" />
                       </Button>
                     </CardContent>
                   </Card>
@@ -336,11 +338,11 @@ export default function RewardsPage() {
               className="space-y-4 max-w-3xl"
             >
               {vouchers.length === 0 ? (
-                <Card className="p-12 text-center border-dashed border bg-white flex flex-col items-center gap-4">
+                <Card className="p-12 text-center border-dashed border dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col items-center gap-4">
                   <Tag size={40} className="text-slate-200" />
                   <div>
-                    <h3 className="text-lg font-bold text-slate-800">No vouchers claimed yet</h3>
-                    <p className="text-sm text-slate-400 mt-1">Redeem your accumulated cleanliness points in the Rewards Shop tab to claim discount coupons!</p>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No vouchers claimed yet</h3>
+                    <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Redeem your accumulated cleanliness points in the Rewards Shop tab to claim discount coupons!</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => setActiveSubTab('shop')} className="rounded-xl">
                     Browse Rewards Shop
@@ -351,21 +353,21 @@ export default function RewardsPage() {
                   {vouchers.map((voucher) => {
                     const RewardIcon = voucher.reward.icon;
                     return (
-                      <Card key={voucher.id} className="border border-slate-200 overflow-hidden bg-white shadow-sm flex flex-col">
-                        <div className="p-5 flex gap-4 items-start border-b border-dashed border-slate-100">
+                      <Card key={voucher.id} className="border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-sm flex flex-col">
+                        <div className="p-5 flex gap-4 items-start border-b border-dashed border-slate-100 dark:border-slate-800">
                           <div className={`p-2.5 rounded-xl border ${voucher.reward.iconColor} shrink-0`}>
                             <RewardIcon size={20} />
                           </div>
                           <div className="space-y-1">
-                            <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{voucher.reward.title}</h4>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{voucher.reward.ecoBenefit}</p>
-                            <span className="text-[9px] text-slate-400 font-medium block">Claimed on: {voucher.dateRedeemed}</span>
+                            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{voucher.reward.title}</h4>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{voucher.reward.ecoBenefit}</p>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium block">Claimed on: {voucher.dateRedeemed}</span>
                           </div>
                         </div>
-                        <div className="bg-slate-50/50 p-4 flex items-center justify-between gap-4">
+                        <div className="bg-slate-50/50 dark:bg-slate-950/40 p-4 flex items-center justify-between gap-4">
                           <div>
-                            <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider mb-0.5">Coupon Code</span>
-                            <span className="font-mono text-xs font-extrabold text-slate-700 bg-slate-100 border px-2 py-0.5 rounded border-slate-200">{voucher.code}</span>
+                            <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 block tracking-wider mb-0.5">Coupon Code</span>
+                            <span className="font-mono text-xs font-extrabold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border px-2 py-0.5 rounded border-slate-200 dark:border-slate-800">{voucher.code}</span>
                           </div>
                           
                           {voucher.status === 'Active' ? (

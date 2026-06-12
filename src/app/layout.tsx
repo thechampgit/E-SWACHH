@@ -8,6 +8,7 @@ import React from 'react';
 import { ClientOnly } from '@/components/ClientOnly';
 import { AuthProvider } from "@/context/AuthContext";
 import { LogoutConfirmProvider } from '@/context/LogoutConfirmContext';
+import { PreferencesProvider } from '@/context/PreferencesContext';
 
 export const metadata: Metadata = {
   title: 'E-Swachh | Smart Governance',
@@ -49,13 +50,15 @@ export default function RootLayout({
         <GlobalErrorBoundary>
           <ClientOnly>
             <FirebaseClientProvider>
-              <AuthProvider>
-                <LogoutConfirmProvider>
-                  {children}
-                  <AiChatbot />
-                  <Toaster />
-                </LogoutConfirmProvider>
-              </AuthProvider>
+              <PreferencesProvider>
+                <AuthProvider>
+                  <LogoutConfirmProvider>
+                    {children}
+                    <AiChatbot />
+                    <Toaster />
+                  </LogoutConfirmProvider>
+                </AuthProvider>
+              </PreferencesProvider>
             </FirebaseClientProvider>
           </ClientOnly>
         </GlobalErrorBoundary>

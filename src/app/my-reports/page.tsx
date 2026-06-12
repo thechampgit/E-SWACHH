@@ -18,7 +18,8 @@ import {
   Calendar,
   MoreVertical,
   Eye,
-  Clock
+  Clock,
+  Flame
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
@@ -167,9 +168,15 @@ function ReportListItem({ report }: any) {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <Badge variant={report.priority === 'High' ? 'destructive' : 'secondary'} className="text-[10px]">
-              {report.priority} Priority
-            </Badge>
+              {(report.upvotes?.length || 0) >= 5 ? (
+                <Badge className="text-[9px] font-extrabold uppercase bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white border-none flex items-center gap-0.5 animate-pulse shadow-sm shadow-orange-500/20">
+                  <Flame size={10} className="fill-current" /> Trending Priority
+                </Badge>
+              ) : (
+                <Badge variant={report.priority === 'High' || report.priority === 'Critical' ? 'destructive' : 'secondary'} className="text-[10px]">
+                  {report.priority} Priority
+                </Badge>
+              )}
             <Button size="sm" variant="ghost" className="text-primary font-bold text-xs" asChild>
               <Link href={`/track/${report.id}`}>
                 View Progress <Eye className="ml-2 h-3 w-3" />

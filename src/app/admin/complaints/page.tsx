@@ -16,7 +16,7 @@ import {
   Flag,
   Calendar,
   Building2
-} from 'lucide-react';
+, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -141,6 +141,7 @@ export default function AdminComplaintsPage() {
               <TableRow>
                 <TableHead>Issue / Citizen</TableHead>
                 <TableHead>Department</TableHead>
+                  <TableHead>Zone</TableHead>
                 <TableHead>Priority</TableHead>
                 <TableHead>SLA Status</TableHead>
                 <TableHead>Status</TableHead>
@@ -150,7 +151,7 @@ export default function AdminComplaintsPage() {
             <TableBody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={6} className="h-16 animate-pulse bg-slate-50/50" /></TableRow>
+                  <TableRow key={i}><TableCell colSpan={7} className="h-16 animate-pulse bg-slate-50/50" /></TableRow>
                 ))
               ) : filteredComplaints.map((c: any) => (
                 <TableRow key={c.id} className="group transition-colors">
@@ -165,8 +166,19 @@ export default function AdminComplaintsPage() {
                       <Building2 size={10} /> {c.department || "Unassigned"}
                     </Badge>
                   </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-[10px] uppercase font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-none">
+                        {c.zone || "Central Zone"}
+                      </Badge>
+                    </TableCell>
                   <TableCell>
-                    <Badge className={cn("text-[10px]", getPriorityColor(c.priority))}>{c.priority}</Badge>
+                    {(c.upvotes?.length || 0) >= 5 ? (
+                        <Badge className="text-[9px] font-extrabold uppercase bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white border-none flex items-center gap-0.5 animate-pulse shadow-sm shadow-orange-500/20 px-2 py-0.5">
+                          <Flame size={10} className="fill-current" /> Trending
+                        </Badge>
+                      ) : (
+                        <Badge className={cn("text-[10px]", getPriorityColor(c.priority))}>{c.priority}</Badge>
+                      )}
                   </TableCell>
                   <TableCell>
                     {c.slaDeadline && (

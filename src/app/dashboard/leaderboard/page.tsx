@@ -25,12 +25,14 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { motion } from 'framer-motion';
+import { usePreferences } from '@/context/PreferencesContext';
 
 export default function LeaderboardPage() {
   const db = useFirestore();
   const auth = useAuth();
   const { user } = useUser();
   const router = useRouter();
+  const { t } = usePreferences();
 
   const [leaders, setLeaders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,20 +171,20 @@ export default function LeaderboardPage() {
       style={{ backgroundImage: "url('/portal_bg.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
     >
       {/* HEADER */}
-      <header className="fixed top-0 z-[100] w-full border-b bg-white/95 backdrop-blur-md h-16">
+      <header className="fixed top-0 z-[100] w-full border-b dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md h-16">
         <div className="container mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="E-Swachh Logo" className="w-8 h-8 object-contain rounded-md" />
-            <span className="text-lg font-headline font-bold text-slate-900">E-Swachh</span>
+            <span className="text-lg font-headline font-bold text-slate-900 dark:text-slate-100">E-Swachh</span>
           </Link>
           <div className="flex items-center gap-4">
             <NotificationCenter />
             <Button variant="ghost" size="icon" asChild className="rounded-full">
-              <Link href="/profile" title="View Profile">
-                <User className="h-4 w-4 text-slate-600" />
+              <Link href="/profile" title={t.profile || "Profile"}>
+                <User className="h-4 w-4 text-slate-600 dark:text-slate-400" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full hover:text-destructive hover:bg-destructive/10" title="Logout">
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full hover:text-destructive hover:bg-destructive/10" title={t.logout || "Logout"}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -193,36 +195,36 @@ export default function LeaderboardPage() {
       <main className="flex-1 container mx-auto px-6 pt-24 pb-12 space-y-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-headline font-bold text-slate-900 flex items-center gap-2">
-              Swachh Warriors <Sparkles className="text-amber-500 h-5 w-5 animate-pulse" />
+            <h1 className="text-2xl font-headline font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              {t.leaderboardTitle || 'Swachh Warriors'} <Sparkles className="text-amber-500 h-5 w-5 animate-pulse" />
             </h1>
-            <p className="text-sm text-slate-600">Inspiring municipal cleanliness. Earn points by keeping your neighborhoods spotless!</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{t.leaderboardSubtitle}</p>
           </div>
-          <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm">
-            <Trophy className="h-4 w-4 animate-bounce" /> {currentUserPoints} Community Points
+          <div className="flex items-center gap-2 bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 dark:border-amber-500/20 text-amber-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm">
+            <Trophy className="h-4 w-4 animate-bounce" /> {currentUserPoints} {t.communityPoints || 'Community Points'}
           </div>
         </div>
 
         {/* SUB-NAVIGATION TABS */}
-        <div className="border-b border-slate-200">
+        <div className="border-b border-slate-200 dark:border-slate-800">
           <div className="flex gap-8">
             <Link 
               href="/dashboard" 
-              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:border-slate-400 flex items-center gap-2 transition-all"
+              className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-400 dark:hover:border-slate-700 flex items-center gap-2 transition-all"
             >
-              <LayoutDashboard className="h-4 w-4" /> My Dashboard
+              <LayoutDashboard className="h-4 w-4" /> {t.myDashboard}
             </Link>
             <Link 
               href="/dashboard/leaderboard" 
-              className="border-b-2 border-cyan-600 pb-3 text-sm font-bold text-cyan-600 flex items-center gap-2 transition-all"
+              className="border-b-2 border-cyan-600 dark:border-cyan-400 pb-3 text-sm font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-2 transition-all"
             >
-              <Trophy className="h-4 w-4" /> Swachh Warriors
+              <Trophy className="h-4 w-4" /> {t.swachhWarriors}
             </Link>
             <Link 
               href="/dashboard/rewards" 
               className="border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:border-slate-400 flex items-center gap-2 transition-all"
             >
-              <Gift className="h-4 w-4" /> Eco Rewards
+              <Gift className="h-4 w-4" /> {t.ecoRewards}
             </Link>
           </div>
         </div>
@@ -230,7 +232,7 @@ export default function LeaderboardPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            <p className="text-sm text-slate-500 font-medium">Loading Leaderboard rankings...</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t.loadingLeaderboard || 'Loading Leaderboard rankings...'}</p>
           </div>
         ) : (
           <>
@@ -246,19 +248,19 @@ export default function LeaderboardPage() {
                     className="order-2 md:order-1 flex flex-col items-center"
                   >
                     <div className="relative mb-3 flex flex-col items-center group">
-                      <div className="w-20 h-20 rounded-full border-4 border-slate-300 bg-white shadow-lg flex items-center justify-center text-4xl group-hover:scale-105 transition-all">
+                      <div className="w-20 h-20 rounded-full border-4 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg flex items-center justify-center text-4xl group-hover:scale-105 transition-all">
                         {finalTopThree[1].avatar}
                       </div>
                       <div className="absolute -top-6 bg-slate-400 text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm border border-white">
-                        <Medal size={10} /> 2nd Place
+                        <Medal size={10} /> {t.secondPlace || '2nd Place'}
                       </div>
                     </div>
-                    <Card className="w-full shadow-md border-slate-200 bg-white/70 backdrop-blur-sm group hover:border-slate-300 transition-all text-center">
+                    <Card className="w-full shadow-md border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm group hover:border-slate-300 dark:hover:border-slate-700 transition-all text-center">
                       <CardContent className="p-6 flex flex-col items-center">
-                        <p className="font-bold text-slate-800 text-base">{finalTopThree[1].name}</p>
-                        <Badge variant="secondary" className="mt-1 text-[9px] bg-slate-100 text-slate-600 font-bold uppercase tracking-wider">{finalTopThree[1].badge}</Badge>
-                        <div className="mt-4 bg-slate-100/60 rounded-xl px-4 py-2 border border-slate-200/50 w-full">
-                          <span className="text-xl font-headline font-extrabold text-slate-700">{finalTopThree[1].points}</span>
+                        <p className="font-bold text-slate-800 dark:text-slate-200 text-base">{finalTopThree[1].name}</p>
+                        <Badge variant="secondary" className="mt-1 text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">{finalTopThree[1].badge}</Badge>
+                        <div className="mt-4 bg-slate-100/60 dark:bg-slate-950/40 rounded-xl px-4 py-2 border border-slate-200/50 dark:border-slate-800/50 w-full">
+                          <span className="text-xl font-headline font-extrabold text-slate-700 dark:text-slate-300">{finalTopThree[1].points}</span>
                           <span className="text-[10px] text-slate-400 font-bold uppercase ml-1">pts</span>
                         </div>
                       </CardContent>
@@ -273,21 +275,21 @@ export default function LeaderboardPage() {
                     className="order-1 md:order-2 flex flex-col items-center md:-translate-y-4"
                   >
                     <div className="relative mb-3 flex flex-col items-center group">
-                      <div className="w-24 h-24 rounded-full border-4 border-amber-400 bg-white shadow-xl flex items-center justify-center text-5xl group-hover:scale-105 transition-all ring-4 ring-amber-400/20">
+                      <div className="w-24 h-24 rounded-full border-4 border-amber-400 bg-white dark:bg-slate-900 shadow-xl flex items-center justify-center text-5xl group-hover:scale-105 transition-all ring-4 ring-amber-400/20 dark:ring-amber-500/10">
                         {finalTopThree[0].avatar}
                       </div>
                       <div className="absolute -top-7 bg-amber-400 text-amber-950 text-xs font-extrabold uppercase px-3 py-1 rounded-full flex items-center gap-1 shadow-md border border-white animate-bounce">
-                        <Crown size={12} className="fill-amber-950" /> 1st Place
+                        <Crown size={12} className="fill-amber-950" /> {t.firstPlace || '1st Place'}
                       </div>
                     </div>
-                    <Card className="w-full shadow-xl border-amber-300/40 bg-gradient-to-b from-amber-500/5 to-white group hover:border-amber-400/50 transition-all text-center">
+                    <Card className="w-full shadow-xl border-amber-300/40 dark:border-amber-900/30 bg-gradient-to-b from-amber-500/5 to-white dark:to-slate-900 group hover:border-amber-400/50 transition-all text-center">
                       <CardContent className="p-6 flex flex-col items-center">
-                        <p className="font-bold text-slate-900 text-lg flex items-center gap-1">
+                        <p className="font-bold text-slate-900 dark:text-slate-100 text-lg flex items-center gap-1">
                           {finalTopThree[0].name}
                           <Sparkles size={14} className="text-amber-500 animate-pulse" />
                         </p>
-                        <Badge variant="outline" className="mt-1 text-[9px] border-amber-300 bg-amber-400/10 text-amber-700 font-extrabold uppercase tracking-wider">{finalTopThree[0].badge}</Badge>
-                        <div className="mt-4 bg-amber-400/10 rounded-xl px-5 py-2.5 border border-amber-200 w-full shadow-inner">
+                        <Badge variant="outline" className="mt-1 text-[9px] border-amber-300 dark:border-amber-900 bg-amber-400/10 dark:bg-amber-950/30 text-amber-700 dark:text-amber-550 font-extrabold uppercase tracking-wider">{finalTopThree[0].badge}</Badge>
+                        <div className="mt-4 bg-amber-400/10 dark:bg-amber-950/20 rounded-xl px-5 py-2.5 border border-amber-200 dark:border-amber-900/50 w-full shadow-inner">
                           <span className="text-2xl font-headline font-extrabold text-amber-600">{finalTopThree[0].points}</span>
                           <span className="text-[10px] text-amber-500 font-bold uppercase ml-1">pts</span>
                         </div>
@@ -303,19 +305,19 @@ export default function LeaderboardPage() {
                     className="order-3 flex flex-col items-center"
                   >
                     <div className="relative mb-3 flex flex-col items-center group">
-                      <div className="w-20 h-20 rounded-full border-4 border-amber-600 bg-white shadow-lg flex items-center justify-center text-4xl group-hover:scale-105 transition-all">
+                      <div className="w-20 h-20 rounded-full border-4 border-amber-600 bg-white dark:bg-slate-900 shadow-lg flex items-center justify-center text-4xl group-hover:scale-105 transition-all">
                         {finalTopThree[2].avatar}
                       </div>
                       <div className="absolute -top-6 bg-amber-600 text-amber-50 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm border border-white">
-                        <Medal size={10} /> 3rd Place
+                        <Medal size={10} /> {t.thirdPlace || '3rd Place'}
                       </div>
                     </div>
-                    <Card className="w-full shadow-md border-slate-200 bg-white/70 backdrop-blur-sm group hover:border-amber-600/30 transition-all text-center">
+                    <Card className="w-full shadow-md border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm group hover:border-amber-600/30 transition-all text-center">
                       <CardContent className="p-6 flex flex-col items-center">
-                        <p className="font-bold text-slate-800 text-base">{finalTopThree[2].name}</p>
-                        <Badge variant="secondary" className="mt-1 text-[9px] bg-slate-100 text-slate-600 font-bold uppercase tracking-wider">{finalTopThree[2].badge}</Badge>
-                        <div className="mt-4 bg-slate-100/60 rounded-xl px-4 py-2 border border-slate-200/50 w-full">
-                          <span className="text-xl font-headline font-extrabold text-slate-700">{finalTopThree[2].points}</span>
+                        <p className="font-bold text-slate-800 dark:text-slate-200 text-base">{finalTopThree[2].name}</p>
+                        <Badge variant="secondary" className="mt-1 text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">{finalTopThree[2].badge}</Badge>
+                        <div className="mt-4 bg-slate-100/60 dark:bg-slate-950/40 rounded-xl px-4 py-2 border border-slate-200/50 dark:border-slate-800/50 w-full">
+                          <span className="text-xl font-headline font-extrabold text-slate-700 dark:text-slate-300">{finalTopThree[2].points}</span>
                           <span className="text-[10px] text-slate-400 font-bold uppercase ml-1">pts</span>
                         </div>
                       </CardContent>
@@ -328,26 +330,26 @@ export default function LeaderboardPage() {
             {/* RANKINGS TABLE SECTION */}
             <div className="max-w-4xl mx-auto space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-headline font-bold text-slate-900 flex items-center gap-2">
-                  <Award className="text-slate-400 h-5 w-5" /> City Leaderboard Rankings
+                <h2 className="text-lg font-headline font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Award className="text-slate-400 h-5 w-5" /> {t.cityRankings || 'City Leaderboard Rankings'}
                 </h2>
                 <div className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
-                  Updated Live <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-ping" />
+                  {t.updatedLive || 'Updated Live'} <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-ping" />
                 </div>
               </div>
 
-              <Card className="border border-slate-200 shadow-sm overflow-hidden bg-white/80 backdrop-blur-sm">
-                <div className="divide-y divide-slate-100">
+              <Card className="border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
                   {finalSecondaryList.map((player) => (
                     <div 
                       key={player.rank}
-                      className={`p-4 flex items-center justify-between hover:bg-slate-50/50 transition-all ${
-                        player.isCurrentUser ? 'bg-cyan-50/40 border-y border-cyan-100/50' : ''
+                      className={`p-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all ${
+                        player.isCurrentUser ? 'bg-cyan-50/40 dark:bg-cyan-950/20 border-y border-cyan-100/50 dark:border-cyan-900/30' : ''
                       }`}
                     >
                       <div className="flex items-center gap-4">
                         {/* Rank Number */}
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm dark:shadow-md ${
                           player.isCurrentUser 
                             ? 'bg-cyan-600 text-white shadow-sm' 
                             : 'bg-slate-100 text-slate-500'
@@ -358,14 +360,14 @@ export default function LeaderboardPage() {
                         <div className="text-2xl mr-1">{player.avatar}</div>
                         <div>
                           <div className={`text-sm font-bold flex items-center gap-1.5 ${
-                            player.isCurrentUser ? 'text-cyan-800' : 'text-slate-800'
+                            player.isCurrentUser ? 'text-cyan-800 dark:text-cyan-400' : 'text-slate-800 dark:text-slate-200'
                           }`}>
                             {player.name}
                             {player.isCurrentUser && (
                               <Badge variant="default" className="text-[8px] px-1.5 py-0 bg-cyan-600 font-bold uppercase hover:bg-cyan-700">You</Badge>
                             )}
                           </div>
-                          <span className="text-[10px] text-slate-400 font-semibold uppercase">{player.badge}</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase">{player.badge}</span>
                         </div>
                       </div>
                       
@@ -373,12 +375,12 @@ export default function LeaderboardPage() {
                         {/* Points */}
                         <div className="text-right">
                           <span className={`text-base font-headline font-extrabold ${
-                            player.isCurrentUser ? 'text-cyan-600' : 'text-slate-700'
+                            player.isCurrentUser ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-700 dark:text-slate-350'
                           }`}>{player.points}</span>
                           <span className="text-[9px] text-slate-400 font-bold uppercase ml-0.5">pts</span>
                         </div>
                         {/* Trend Icon */}
-                        <div className="text-emerald-500 flex items-center gap-0.5 font-bold text-xs bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                        <div className="text-emerald-500 flex items-center gap-0.5 font-bold text-xs bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30">
                           <ChevronUp size={12} /> Live
                         </div>
                       </div>

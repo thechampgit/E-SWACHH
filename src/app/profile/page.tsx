@@ -38,217 +38,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Translation Dictionary for multi-language support
-const translations: Record<string, any> = {
-  en: {
-    title: "Citizen Profile",
-    subtitle: "Manage your personal details, preferences, and identity verification status.",
-    backToDashboard: "Back to Dashboard",
-    avatarAlt: "User initials",
-    verifiedBadge: "Verified Citizen",
-    unverifiedBadge: "Unverified Profile",
-    memberSince: "Member since",
-    pointsEarned: "Points Earned",
-    profileCompletion: "Profile Completion",
-    tabPersonal: "Personal Details",
-    tabSecurity: "Verification & Security",
-    tabPreferences: "Preferences",
-    personalHeader: "Personal Information",
-    personalDesc: "Update your name, contact information, and physical address.",
-    fullName: "Full Name",
-    emailAddress: "Email Address",
-    phoneContact: "Phone Contact",
-    physicalAddress: "Physical Address",
-    saveChanges: "Save Changes",
-    saving: "Saving...",
-    secHeader: "Account Verification",
-    secDesc: "Verify your email and identity to gain priority resolution status.",
-    emailStatus: "Email Status",
-    verified: "Verified",
-    unverified: "Unverified",
-    sendVerification: "Send Verification Email",
-    sending: "Sending...",
-    verificationSent: "Verification email sent successfully!",
-    idVerification: "Identity Verification",
-    idVerificationDesc: "Provide an official municipal ID to unlock the Verified Citizen badge and priority resolution.",
-    docType: "Document Type",
-    docNumber: "Document ID Number",
-    selectDoc: "Select Document Type",
-    aadhar: "Aadhaar Card",
-    voter: "Voter ID",
-    license: "Driving License",
-    pan: "PAN Card",
-    submitVerification: "Submit Verification Request",
-    submitting: "Submitting...",
-    verifiedSuccess: "Your profile has been verified successfully!",
-    prefHeader: "Application Preferences",
-    prefDesc: "Customize the interface language and styling theme.",
-    appLanguage: "Application Language",
-    appTheme: "Styling Theme",
-    light: "Light Mode",
-    dark: "Dark Mode",
-    system: "System Mode",
-    successSave: "Profile updated successfully!",
-    errorSave: "Failed to update profile.",
-    errorEmailAuth: "Please log in again to update your email address.",
-  },
-  hi: {
-    title: "नागरिक प्रोफ़ाइल",
-    subtitle: "अपने व्यक्तिगत विवरण, प्राथमिकताएं और पहचान सत्यापन स्थिति प्रबंधित करें।",
-    backToDashboard: "डैशबोर्ड पर वापस जाएं",
-    avatarAlt: "उपयोगकर्ता के आद्याक्षर",
-    verifiedBadge: "सत्यापित नागरिक",
-    unverifiedBadge: "असत्यापित प्रोफ़ाइल",
-    memberSince: "सदस्यता की तिथि",
-    pointsEarned: "अर्जित अंक",
-    profileCompletion: "प्रोफ़ाइल पूर्णता",
-    tabPersonal: "व्यक्तिगत विवरण",
-    tabSecurity: "सत्यापन और सुरक्षा",
-    tabPreferences: "प्राथमिकताएं",
-    personalHeader: "व्यक्तिगत जानकारी",
-    personalDesc: "अपना नाम, संपर्क जानकारी और भौतिक पता अपडेट करें।",
-    fullName: "पूरा नाम",
-    emailAddress: "ईमेल पता",
-    phoneContact: "फ़ोन संपर्क",
-    physicalAddress: "भौतिक पता",
-    saveChanges: "बदलाव सहेजें",
-    saving: "सहेज रहा है...",
-    secHeader: "खाता सत्यापन",
-    secDesc: "प्राथमिकता समाधान स्थिति प्राप्त करने के लिए अपना ईमेल और पहचान सत्यापित करें।",
-    emailStatus: "ईमेल स्थिति",
-    verified: "सत्यापित",
-    unverified: "असत्यापित",
-    sendVerification: "सत्यापन ईमेल भेजें",
-    sending: "भेज रहा है...",
-    verificationSent: "सत्यापन ईमेल सफलतापूर्वक भेजा गया!",
-    idVerification: "पहचान सत्यापन",
-    idVerificationDesc: "सत्यापित नागरिक बैज और प्राथमिकता समाधान अनलॉक करने के लिए एक आधिकारिक नगर निगम आईडी प्रदान करें।",
-    docType: "दस्तावेज़ का प्रकार",
-    docNumber: "दस्तावेज़ आईडी संख्या",
-    selectDoc: "दस्तावेज़ प्रकार चुनें",
-    aadhar: "आधार कार्ड",
-    voter: "मतदाता पहचान पत्र",
-    license: "ड्राइविंग लाइसेंस",
-    pan: "पैन कार्ड",
-    submitVerification: "सत्यापन अनुरोध सबमिट करें",
-    submitting: "सबमिट कर रहा है...",
-    verifiedSuccess: "आपकी प्रोफ़ाइल सफलतापूर्वक सत्यापित हो गई है!",
-    prefHeader: "एप्लिकेशन प्राथमिकताएं",
-    prefDesc: "इंटरफ़ेस भाषा और स्टाइलिंग थीम को कस्टमाइज़ करें।",
-    appLanguage: "एप्लिकेशन की भाषा",
-    appTheme: "स्टाइलिंग थीम",
-    light: "लाइट मोड",
-    dark: "डार्क मोड",
-    system: "सिस्टम मोड",
-    successSave: "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई!",
-    errorSave: "प्रोफ़ाइल अपडेट करने में विफल।",
-    errorEmailAuth: "कृपया अपना ईमेल पता अपडेट करने के लिए फिर से लॉग इन करें।",
-  },
-  bn: {
-    title: "নাগরিক প্রোফাইল",
-    subtitle: "আপনার ব্যক্তিগত বিবরণ, পছন্দ এবং পরিচয় যাচাইকরণ স্থিতি পরিচালনা করুন।",
-    backToDashboard: "ড্যাশবোর্ডে ফিরে যান",
-    avatarAlt: "ব্যবহারকারীর আদ্যক্ষর",
-    verifiedBadge: "যাচাইকৃত নাগরিক",
-    unverifiedBadge: "অযাচাইকৃত প্রোফাইল",
-    memberSince: "সদস্যপদ কাল থেকে",
-    pointsEarned: "অর্জিত পয়েন্ট",
-    profileCompletion: "প্রোফাইল সম্পূর্ণতা",
-    tabPersonal: "ব্যক্তিগত বিবরণ",
-    tabSecurity: "যাচাইকরণ ও নিরাপত্তা",
-    tabPreferences: "পছন্দসমূহ",
-    personalHeader: "ব্যক্তিগত তথ্য",
-    personalDesc: "আপনার নাম, যোগাযোগের তথ্য এবং স্থায়ী ঠিকানা আপডেট করুন।",
-    fullName: "সম্পূর্ণ নাম",
-    emailAddress: "ইমেল ঠিকানা",
-    phoneContact: "ফোন নম্বর",
-    physicalAddress: "স্থায়ী ঠিকানা",
-    saveChanges: "পরিবর্তনগুলি সংরক্ষণ করুন",
-    saving: "সংরक्षण করা হচ্ছে...",
-    secHeader: "অ্যাকাউন্ট যাচাইকরণ",
-    secDesc: "অগ্রাধিকার সমাধানের স্থিতি পেতে আপনার ইমেল এবং পরিচয় যাচাই করুন।",
-    emailStatus: "ইমেলের স্থিতি",
-    verified: "যাচাইকৃত",
-    unverified: "অযাচাইকৃত",
-    sendVerification: "যাচাইকরণ ইমেল পাঠান",
-    sending: "পাঠানো হচ্ছে...",
-    verificationSent: "যাচাইকরণ ইমেল সফলভাবে পাঠানো হয়েছে!",
-    idVerification: "পরিচয় যাচাইকরণ",
-    idVerificationDesc: "যাচাইকৃত নাগরিক ব্যাজ এবং অগ্রাধিকার সমাধান আনলক করতে একটি অফিসিয়াল পৌর আইডি প্রদান করুন।",
-    docType: "নথির ধরণ",
-    docNumber: "নথি আইডি নম্বর",
-    selectDoc: "নথির ধরণ নির্বাচন করুন",
-    aadhar: "আধার কার্ড",
-    voter: "ভোটার আইডি",
-    license: "ড্রাইভিং লাইসেন্স",
-    pan: "প্যান কার্ড",
-    submitVerification: "যাচাইকরণের অনুরোধ জমা দিন",
-    submitting: "জমা দেওয়া হচ্ছে...",
-    verifiedSuccess: "আপনার প্রোফাইল সফলভাবে যাচাই করা হয়েছে!",
-    prefHeader: "অ্যাপ্লিকেশন পছন্দসমূহ",
-    prefDesc: "ইন্টারফেসের ভাষা এবং স্টাইল থিম কাস্টমাইজ করুন।",
-    appLanguage: "অ্যাপ্লিকেশনের ভাষা",
-    appTheme: "স্টাইল থিম",
-    light: "লাইট মোড",
-    dark: "ডার্ক মোড",
-    system: "সিস্টেম মোড",
-    successSave: "প্রোফাইল সফলভাবে আপডেট করা হয়েছে!",
-    errorSave: "প্রোফাইল আপডেট করতে ব্যর্থ হয়েছে।",
-    errorEmailAuth: "আপনার ইমেল ঠিকানা আপডেট করতে অনুগ্রহ করে আবার লগ ইন করুন।",
-  },
-  mai: {
-    title: "नागरिक प्रोफाइल",
-    subtitle: "अपन व्यक्तिगत विवरण, पसंद आ पहचान सत्यापन स्थिति प्रबंधित करू।",
-    backToDashboard: "डैशबोर्ड पर वापस जाउ",
-    avatarAlt: "उपयोगकर्ताक आद्याक्षर",
-    verifiedBadge: "सत्यापित नागरिक",
-    unverifiedBadge: "असत्यापित प्रोफाइल",
-    memberSince: "सदस्यताक तिथि",
-    pointsEarned: "अर्जित अंक",
-    profileCompletion: "प्रोफाइल पूर्णता",
-    tabPersonal: "व्यक्तिगत विवरण",
-    tabSecurity: "सत्यापन आ सुरक्षा",
-    tabPreferences: "प्राथमिकता",
-    personalHeader: "व्यक्तिगत जानकारी",
-    personalDesc: "अपन नाम, संपर्क जानकारी आ भौतिक पता अपडेट करू।",
-    fullName: "पूरा नाम",
-    emailAddress: "ईमेल पता",
-    phoneContact: "फोन संपर्क",
-    physicalAddress: "भौतिक पता",
-    saveChanges: "बदलाव सुरक्षित करू",
-    saving: "सुरक्षित भ रहल अछि...",
-    secHeader: "खाता सत्यापन",
-    secDesc: "प्राथमिकता समाधानक स्थिति प्राप्त करवाक लेल अपन ईमेल आ पहचान सत्यापित करू।",
-    emailStatus: "ईमेल स्थिति",
-    verified: "सत्यापित",
-    unverified: "असत्यापित",
-    sendVerification: "सत्यापन ईमेल पठाउ",
-    sending: "पठा रहल अछि...",
-    verificationSent: "सत्यापन ईमेल सफलतापूर्वक पठाओल गेल!",
-    idVerification: "पहचान सत्यापन",
-    idVerificationDesc: "सत्यापित नागरिक बैज आ प्राथमिकता समाधानक लेल एकटा आधिकारिक नगर निगम आईडी प्रदान करू।",
-    docType: "दस्तावेजक प्रकार",
-    docNumber: "दस्तावेज आईडी नंबर",
-    selectDoc: "दस्तावेजक प्रकार चुनू",
-    aadhar: "आधार कार्ड",
-    voter: "मतदाता पहचान पत्र",
-    license: "ड्राइविंग लाइसेंस",
-    pan: "पैन कार्ड",
-    submitVerification: "सत्यापन अनुरोध सबमिट करू",
-    submitting: "सबमिट भ रहल अछि...",
-    verifiedSuccess: "अहाँक प्रोफाइल सफलतापूर्वक सत्यापित भ गेल अछि!",
-    prefHeader: "एप्लिकेशन प्राथमिकता",
-    prefDesc: "भारत मे स्वच्छताक लेल भाषा आ डिजाइन बदलू।",
-    appLanguage: "एप्लिकेशनक भाषा",
-    appTheme: "डिजाइन थीम",
-    light: "लाइट मोड",
-    dark: "डार्क मोड",
-    system: "सिस्टम मोड",
-    successSave: "प्रोफाइल सफलतापूर्वक अपडेट कएल गेल!",
-    errorSave: "प्रोफाइल अपडेट करबा मे विफल।",
-    errorEmailAuth: "अपन ईमेल पता अपडेट करबाक लेल कृपया दोबारा लॉग इन करू।",
-  }
-};
+import { usePreferences } from '@/context/PreferencesContext';
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -256,9 +46,7 @@ export default function ProfilePage() {
   const auth = useAuth();
   const router = useRouter();
 
-  // Load language and theme from localStorage
-  const [lang, setLang] = useState('en');
-  const [theme, setTheme] = useState('light');
+  const { lang, theme, setLang, setTheme, t } = usePreferences();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const storage = useStorage();
@@ -292,19 +80,7 @@ export default function ProfilePage() {
 
   const { data: userData, loading: docLoading } = useDoc<any>(userDocRef);
 
-  const t = translations[lang] || translations.en;
-
-  // Initialize theme & language preferences
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('Eswachh-language') || 'en';
-      setLang(savedLang);
-
-      const savedTheme = localStorage.getItem('eswachh-theme') || 'light';
-      setTheme(savedTheme);
-      applyTheme(savedTheme);
-    }
-  }, []);
+  
 
   // Update local forms once user data is loaded
   useEffect(() => {
@@ -317,42 +93,22 @@ export default function ProfilePage() {
     }
   }, [userData, user]);
 
-  const applyTheme = (targetTheme: string) => {
-    if (typeof window === 'undefined') return;
-    const root = window.document.documentElement;
-    
-    if (targetTheme === 'dark') {
-      root.classList.add('dark');
-    } else if (targetTheme === 'light') {
-      root.classList.remove('dark');
-    } else {
-      // System Theme handling
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (systemPrefersDark) {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
-    }
-  };
-
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedLang = e.target.value;
+    const selectedLang = e.target.value as any;
     setLang(selectedLang);
-    localStorage.setItem('eswachh-language', selectedLang);
     
     let title = 'Language Changed';
     let description = 'The interface language was updated successfully.';
     
     if (selectedLang === 'hi') {
-      title = 'भाषा बदली गई';
-      description = 'इंटरफ़ेस भाषा सफलतापूर्वक अपडेट की गई थी।';
+      title = 'भाषा बदल दी गई है';
+      description = 'इंटरफ़ेस भाषा सफलतापूर्वक अपडेट हो गई है।';
     } else if (selectedLang === 'bn') {
       title = 'ভাষা পরিবর্তন করা হয়েছে';
-      description = 'ইন্টারফেসের ভাষা সফলভাবে আপডেট করা হয়েছে।';
+      description = 'ইন্টারফেস ভাষা সফলভাবে আপডেট করা হয়েছে।';
     } else if (selectedLang === 'mai') {
-      title = 'भाषा बदलल गेल';
-      description = 'इंटरफ़ेसक भाषा सफलतापूर्वक अपडेट कएल गेल छल।';
+      title = 'भाषा बदल गेल अछि';
+      description = 'इंटरफेसक भाषा सफलतापूर्वक अपडेट कएल गेल अछि';
     }
     
     toast({
@@ -362,10 +118,8 @@ export default function ProfilePage() {
   };
 
   const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedTheme = e.target.value;
+    const selectedTheme = e.target.value as any;
     setTheme(selectedTheme);
-    localStorage.setItem('eswachh-theme', selectedTheme);
-    applyTheme(selectedTheme);
     toast({
       title: "Theme Updated",
       description: `Interface style switched to ${selectedTheme} mode.`,
