@@ -10,6 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
 import { useUser, useAuth } from '@/firebase';
 import { useLogoutConfirm } from '@/context/LogoutConfirmContext';
 import { signOut } from 'firebase/auth';
@@ -340,6 +349,82 @@ export default function LandingPage() {
                   <Link href="/login">Login</Link>
                 </Button>
               )}
+            </div>
+
+            {/* Mobile Navigation Menu */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`rounded-full hover:bg-black/5 dark:hover:bg-white/10 ${
+                      isScrolled ? 'text-slate-900' : 'text-white'
+                    }`}
+                    aria-label="Toggle navigation menu"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] p-6 bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800">
+                  <SheetHeader className="text-left mb-6">
+                    <SheetTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100 font-headline font-extrabold">
+                      <img src="/logo.png" alt="" className="w-8 h-8 object-contain rounded-md" />
+                      <span>E-Swachh</span>
+                    </SheetTitle>
+                    <SheetDescription className="text-xs text-slate-500 dark:text-slate-400">
+                      National Cleanliness Grid
+                    </SheetDescription>
+                  </SheetHeader>
+                  
+                  <div className="flex flex-col gap-5 mt-4">
+                    {user ? (
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3 mb-2">
+                        <div className="space-y-0.5">
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-widest">Logged in as</p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{user.displayName || user.email || 'Citizen'}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <Button asChild size="sm" variant="outline" className="w-full text-xs font-bold uppercase tracking-wider h-9 border-slate-200 dark:border-slate-800">
+                            <Link href="/profile">Profile</Link>
+                          </Button>
+                          <Button asChild size="sm" className="w-full text-xs font-bold uppercase tracking-wider h-9 bg-cyan-600 hover:bg-cyan-700 text-white border-none shadow-sm">
+                            <Link href="/dashboard">Portal</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <Link href="#features" className="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors py-1.5 border-b border-slate-100 dark:border-slate-900">
+                      Features
+                    </Link>
+                    <Link href="#categories" className="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors py-1.5 border-b border-slate-100 dark:border-slate-900">
+                      Categories
+                    </Link>
+                    <Link href="#dashboard" className="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors py-1.5 border-b border-slate-100 dark:border-slate-900">
+                      Preview
+                    </Link>
+                    <Link href="#help" className="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors py-1.5 border-b border-slate-100 dark:border-slate-900">
+                      Help Center
+                    </Link>
+                    <Link href="/map" className="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors py-1.5 border-b border-slate-100 dark:border-slate-900 flex items-center gap-1.5">
+                      <Globe size={14} className="text-cyan-600 animate-spin-slow" /> Impact Map
+                    </Link>
+
+                    <div className="pt-6 mt-auto">
+                      {user ? (
+                        <Button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white font-bold uppercase tracking-wider text-xs py-5">
+                          <LogOut className="mr-2 h-4 w-4" /> Logout
+                        </Button>
+                      ) : (
+                        <Button asChild className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold uppercase tracking-wider text-xs py-5">
+                          <Link href="/login">Login</Link>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
