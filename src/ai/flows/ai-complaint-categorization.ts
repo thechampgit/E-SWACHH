@@ -52,7 +52,13 @@ export type AiComplaintCategorizationOutput = z.infer<
 export async function categorizeComplaint(
   input: AiComplaintCategorizationInput
 ): Promise<AiComplaintCategorizationOutput> {
-  return aiComplaintCategorizationFlow(input);
+  try {
+    const result = await aiComplaintCategorizationFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in categorizeComplaint server action:', error);
+    throw error;
+  }
 }
 
 const prompt = ai.definePrompt({

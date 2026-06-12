@@ -20,7 +20,13 @@ const AiAssistantOutputSchema = z.object({
 });
 
 export async function chatWithAssistant(input: z.infer<typeof AiAssistantInputSchema>) {
-  return aiAssistantFlow(input);
+  try {
+    const result = await aiAssistantFlow(input);
+    return result;
+  } catch (error) {
+    console.error('Error in chatWithAssistant server action:', error);
+    throw error;
+  }
 }
 
 const prompt = ai.definePrompt({
