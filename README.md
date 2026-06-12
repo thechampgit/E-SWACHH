@@ -1,8 +1,8 @@
-# e-Swacch – Smart Civic Grievance Management Platform
+# E-Swacch – Smart Civic Grievance Management Platform
 
 ## Overview
 
-**e-Swacch** is a digital civic engagement platform designed to bridge the gap between citizens and municipal authorities. The platform enables residents to report local civic issues such as garbage accumulation, potholes, drainage problems, streetlight failures, water leakage, and sanitation concerns through an intuitive web interface.
+**E-Swacch** is a digital civic engagement platform designed to bridge the gap between citizens and municipal authorities. The platform enables residents to report local civic issues such as garbage accumulation, potholes, drainage problems, streetlight failures, water leakage, and sanitation concerns through an intuitive web interface.
 
 By leveraging location-based reporting, real-time status tracking, and transparent communication, e-Swacch aims to promote cleaner, smarter, and more responsive communities.
 
@@ -135,7 +135,7 @@ src/
 
 ## Impact
 
-e-Swacch contributes to:
+E-Swacch contributes to:
 
 * Cleaner cities and neighborhoods
 * Improved citizen participation
